@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaction_model.dart';
 import '../models/goal_model.dart';
 import '../models/debt_model.dart';
+import '../models/account_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -11,7 +12,80 @@ class FirestoreService {
   // Get current user ID
   String get _userId => _auth.currentUser!.uid;
 
-  // Add a Transaction
+  // --- ACCOUNTS SECTION ---
+
+  Future<void> addAccount({
+    required String name,
+    required double initialBalance,
+    required String type,
+    required int colorCode,
+  }) async {
+    await _db.collection('accounts').add({
+      'userId': _userId,
+      'name': name,
+      'currentBalance': initialBalance,
+      'type': type,
+      'colorCode': colorCode,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Stream<List<AccountModel>> getAccounts() {
+    return _db
+        .collection('accounts')
+        .where('userId', isEqualTo: _userId)
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => AccountModel.fromFirestore(doc))
+              .toList(),
+        );
+  }
+
+  // --- UPDATED TRANSACTION LOGIC (CRITICAL) ---
+
+  // We overwrite the old addTransaction to handle Account Balances
+  Future<void> addTransactionWithAccount({
+    required double amount,
+    required String type, // 'income' or 'expense'
+    required String category,
+    required DateTime date,
+    required String accountId, // NEW: Which account?
+    String? note,
+  }) async {
+    final batch = _db
+        .batch(); // Use a Batch to ensure both happen or neither happens
+
+    // 1. Create the Transaction Ref
+    final transactionRef = _db.collection('transactions').doc();
+    batch.set(transactionRef, {
+      'userId': _userId,
+      'amount': amount,
+      'type': type,
+      'category': category,
+      'date': Timestamp.fromDate(date),
+      'accountId': accountId, // Link it
+      'note': note,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // 2. Update the Account Balance Ref
+    final accountRef = _db.collection('accounts').doc(accountId);
+    if (type == 'income') {
+      batch.update(accountRef, {
+        'currentBalance': FieldValue.increment(amount),
+      });
+    } else {
+      batch.update(accountRef, {
+        'currentBalance': FieldValue.increment(-amount),
+      });
+    }
+
+    await batch.commit(); // Run both updates instantly
+  }
+
+  // Original addTransaction method (keep for backward compatibility if needed)
   Future<void> addTransaction({
     required double amount,
     required String type,

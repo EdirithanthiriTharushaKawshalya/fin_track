@@ -2,16 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/transaction_model.dart';
 import '../../core/services/firestore_service.dart';
 
-// 1. The Service Provider (Gives access to FirestoreService)
 final firestoreServiceProvider = Provider((ref) => FirestoreService());
 
-// 2. The Data Stream (Listens to the database)
+// 1. Logic: Filter for THIS MONTH only
 final transactionStreamProvider = StreamProvider<List<TransactionModel>>((ref) {
   final firestoreService = ref.watch(firestoreServiceProvider);
-  return firestoreService.getTransactions();
+
+  return firestoreService.getTransactions().map((allTransactions) {
+    final now = DateTime.now();
+    // Keep only transactions from the current year AND month
+    return allTransactions.where((t) {
+      return t.date.year == now.year && t.date.month == now.month;
+    }).toList();
+  });
 });
 
-// 3. The Math (Calculates Totals automatically)
+// 2. Logic: Recalculate Totals based on the filtered list
 final portfolioProvider = Provider.autoDispose((ref) {
   final transactionsAsync = ref.watch(transactionStreamProvider);
 
