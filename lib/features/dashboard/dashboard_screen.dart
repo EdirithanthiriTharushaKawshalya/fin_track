@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/models/transaction_model.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../transactions/add_transaction_sheet.dart';
 import 'transaction_provider.dart';
 import 'widgets/balance_card.dart';
@@ -178,7 +179,8 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                               ),
                               trailing: Text(
-                                '${isIncome ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
+                                // Clean logic: Plus/Minus sign + Formatted Amount
+                                '${isIncome ? '+' : '-'}${CurrencyFormatter.format(t.amount)}',
                                 style: TextStyle(
                                   color: isIncome
                                       ? const Color(0xFF03DAC6)

@@ -148,7 +148,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               color: activeColor,
             ),
             decoration: InputDecoration(
-              prefixText: '\$ ',
+              prefixText: 'Rs ', // Changed from '$ ' to 'Rs '
               prefixStyle: TextStyle(fontSize: 32, color: activeColor),
               hintText: '0.00',
               hintStyle: TextStyle(color: Colors.white24),

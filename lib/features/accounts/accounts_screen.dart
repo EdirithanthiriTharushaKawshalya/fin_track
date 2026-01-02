@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/account_model.dart';
 import '../../core/services/firestore_service.dart';
+import '../../core/utils/currency_formatter.dart'; // Import the formatter
 
 final accountsStreamProvider = StreamProvider<List<AccountModel>>((ref) {
-  return ref.watch(firestoreServiceProvider).getAccounts();
+  final firestoreService = ref.watch(firestoreServiceProvider);
+  return firestoreService
+      .getAccounts(); // Using provider to access service safely
 });
 
 class AccountsScreen extends ConsumerWidget {
@@ -96,8 +99,9 @@ class AccountsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    // UPDATED: Using CurrencyFormatter
                     Text(
-                      '\$${acc.currentBalance.toStringAsFixed(2)}',
+                      CurrencyFormatter.format(acc.currentBalance),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -118,7 +122,6 @@ class AccountsScreen extends ConsumerWidget {
     final nameCtrl = TextEditingController();
     final balanceCtrl = TextEditingController();
     String type = 'bank'; // Default
-    int selectedColor = 0xFFBB86FC; // Default Purple
 
     showDialog(
       context: context,
@@ -139,7 +142,12 @@ class AccountsScreen extends ConsumerWidget {
               controller: balanceCtrl,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Current Balance'),
+              // UPDATED: Added prefixText for input
+              decoration: const InputDecoration(
+                labelText: 'Current Balance',
+                prefixText: 'Rs ',
+                prefixStyle: TextStyle(color: Colors.white70),
+              ),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -183,7 +191,7 @@ class AccountsScreen extends ConsumerWidget {
                       type: type,
                       colorCode: type == 'bank'
                           ? 0xFF3700B3
-                          : 0xFF03DAC6, // Auto-color based on type
+                          : 0xFF03DAC6, // Auto-color
                     );
                 Navigator.pop(context);
               }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../transaction_provider.dart';
+import '../../../../core/utils/currency_formatter.dart';
 
 class BalanceCard extends ConsumerWidget {
   const BalanceCard({super.key});
@@ -47,7 +48,7 @@ class BalanceCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '\$${balance.toStringAsFixed(2)}',
+            CurrencyFormatter.format(balance),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 36,
@@ -77,7 +78,7 @@ class BalanceCard extends ConsumerWidget {
                     ],
                   ),
                   Text(
-                    '\$${income.toStringAsFixed(2)}',
+                    CurrencyFormatter.format(income),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -105,7 +106,7 @@ class BalanceCard extends ConsumerWidget {
                     ],
                   ),
                   Text(
-                    '\$${expense.toStringAsFixed(2)}',
+                    CurrencyFormatter.format(expense),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/debt_model.dart';
 import '../../core/services/firestore_service.dart';
+import '../../core/utils/currency_formatter.dart'; // Import the formatter
 
 // Provider for Debts
 final debtsStreamProvider = StreamProvider<List<DebtModel>>((ref) {
@@ -151,8 +152,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen>
                     ],
                   ),
                 ),
+                // UPDATED: Using CurrencyFormatter
                 Text(
-                  '\$${debt.amount.toStringAsFixed(0)}',
+                  CurrencyFormatter.format(debt.amount),
                   style: TextStyle(
                     color: color,
                     fontSize: 18,
@@ -190,10 +192,14 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen>
               controller: amountCtrl,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Amount'),
+              // UPDATED: Added prefixText for input
+              decoration: const InputDecoration(
+                labelText: 'Amount',
+                prefixText: 'Rs ',
+                prefixStyle: TextStyle(color: Colors.white70),
+              ),
             ),
             const SizedBox(height: 16),
-            // Simple Dropdown to switch type if needed
             DropdownButtonFormField<String>(
               value: type,
               dropdownColor: const Color(0xFF2C2C2C),

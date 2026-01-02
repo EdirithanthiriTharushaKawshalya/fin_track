@@ -1,9 +1,10 @@
+import 'package:fin_track/features/dashboard/transaction_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/models/goal_model.dart';
 import '../../core/services/firestore_service.dart';
-import '../dashboard/transaction_provider.dart';
+import '../../core/utils/currency_formatter.dart'; // Import the formatter
 
 // Create a provider specifically for goals
 final goalsStreamProvider = StreamProvider<List<GoalModel>>((ref) {
@@ -129,8 +130,9 @@ class GoalsScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          // UPDATED: Using CurrencyFormatter
                           Text(
-                            '\$${goal.savedAmount.toStringAsFixed(0)} / \$${goal.targetAmount.toStringAsFixed(0)}',
+                            '${CurrencyFormatter.format(goal.savedAmount)} / ${CurrencyFormatter.format(goal.targetAmount)}',
                             style: const TextStyle(color: Colors.white70),
                           ),
                           ElevatedButton(
@@ -178,7 +180,12 @@ class GoalsScreen extends ConsumerWidget {
               controller: amountCtrl,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Target Amount'),
+              // UPDATED: Added prefixText for input
+              decoration: const InputDecoration(
+                labelText: 'Target Amount',
+                prefixText: 'Rs ',
+                prefixStyle: TextStyle(color: Colors.white70),
+              ),
             ),
           ],
         ),
@@ -224,7 +231,12 @@ class GoalsScreen extends ConsumerWidget {
           controller: amountCtrl,
           keyboardType: TextInputType.number,
           style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(labelText: 'Amount'),
+          // UPDATED: Added prefixText for input
+          decoration: const InputDecoration(
+            labelText: 'Amount',
+            prefixText: 'Rs ',
+            prefixStyle: TextStyle(color: Colors.white70),
+          ),
         ),
         actions: [
           TextButton(
