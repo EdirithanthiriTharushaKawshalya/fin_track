@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/models/transaction_model.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../transactions/add_transaction_sheet.dart';
+import '../categories/categories_screen.dart'; // Added import
 import 'transaction_provider.dart';
 import 'widgets/balance_card.dart';
 // Note: We REMOVED the chart import because it's moved to Analytics!
@@ -49,12 +50,28 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_none,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {}, // Future feature
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.category, color: Colors.white),
+                        tooltip: 'Manage Categories',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CategoriesScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.notifications_none,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {}, // Future feature
+                      ),
+                    ],
                   ),
                 ],
               ),

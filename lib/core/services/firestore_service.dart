@@ -4,6 +4,7 @@ import '../models/transaction_model.dart';
 import '../models/goal_model.dart';
 import '../models/debt_model.dart';
 import '../models/account_model.dart';
+import '../models/category_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -231,6 +232,40 @@ class FirestoreService {
         .map(
           (snapshot) =>
               snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList(),
+        );
+  }
+
+  // --- CATEGORIES SECTION ---
+
+  Future<void> addCategory({
+    required String name,
+    required String type,
+    required int iconCode,
+    required int colorCode,
+  }) async {
+    await _db.collection('categories').add({
+      'userId': _userId,
+      'name': name,
+      'type': type,
+      'iconCode': iconCode,
+      'colorCode': colorCode,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteCategory(String id) async {
+    await _db.collection('categories').doc(id).delete();
+  }
+
+  Stream<List<CategoryModel>> getCategories() {
+    return _db
+        .collection('categories')
+        .where('userId', isEqualTo: _userId)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CategoryModel.fromFirestore(doc))
+              .toList(),
         );
   }
 }
