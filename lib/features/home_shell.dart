@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'goals/goals_screen.dart';
+import 'debts/debts_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -16,11 +17,7 @@ class _HomeShellState extends State<HomeShell> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const GoalsScreen(),
-    const Scaffold(
-      body: Center(
-        child: Text("Debts Coming Soon", style: TextStyle(color: Colors.white)),
-      ),
-    ),
+    const DebtsScreen(), // <--- The real screen!
   ];
 
   @override

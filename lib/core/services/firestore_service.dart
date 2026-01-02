@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaction_model.dart';
 import '../models/goal_model.dart';
+import '../models/debt_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -96,6 +97,40 @@ class FirestoreService {
         .map(
           (snapshot) =>
               snapshot.docs.map((doc) => GoalModel.fromFirestore(doc)).toList(),
+        );
+  }
+
+  // --- DEBTS SECTION ---
+
+  Future<void> addDebt({
+    required String personName,
+    required double amount,
+    required String type, // 'borrowed' or 'lent'
+    required DateTime dueDate,
+  }) async {
+    await _db.collection('debts').add({
+      'userId': _userId,
+      'personName': personName,
+      'amount': amount,
+      'type': type,
+      'dueDate': Timestamp.fromDate(dueDate),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteDebt(String id) async {
+    await _db.collection('debts').doc(id).delete();
+  }
+
+  Stream<List<DebtModel>> getDebts() {
+    return _db
+        .collection('debts')
+        .where('userId', isEqualTo: _userId)
+        .orderBy('dueDate', descending: false) // Soonest due first
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => DebtModel.fromFirestore(doc)).toList(),
         );
   }
 }
