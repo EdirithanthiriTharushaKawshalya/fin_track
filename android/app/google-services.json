@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "376334215188",
+    "project_id": "fintrack-65306",
+    "storage_bucket": "fintrack-65306.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376334215188:android:2dd858ff8039870def5f01",
+        "android_client_info": {
+          "package_name": "com.example.fin_track"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlR5rBjbqu1aiiEyAwQ3jJt5o7WGqgmhs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
