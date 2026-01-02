@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/models/transaction_model.dart';
 import '../transactions/add_transaction_sheet.dart';
 import 'transaction_provider.dart';
 import 'widgets/balance_card.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+// 1. IMPORT THE CHART WIDGET HERE
+import 'widgets/spending_chart.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Watch the stream of transactions
     final transactionAsync = ref.watch(transactionStreamProvider);
 
     return Scaffold(
@@ -36,8 +38,11 @@ class DashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 2. The Balance Card
+            // The Balance Card
             const BalanceCard(),
+
+            // 2. PLACE THE CHART WIDGET HERE
+            const SpendingChart(),
 
             const SizedBox(height: 24),
 
@@ -52,7 +57,7 @@ class DashboardScreen extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            // 3. The Transaction List
+            // The Transaction List
             Expanded(
               child: transactionAsync.when(
                 data: (transactions) {
@@ -71,45 +76,68 @@ class DashboardScreen extends ConsumerWidget {
                       final t = transactions[index];
                       final isIncome = t.type == 'income';
 
-                      return Card(
-                        color: const Color(0xFF1E1E1E),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      return Dismissible(
+                        key: Key(t.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFCF6679).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: Color(0xFFCF6679),
+                            size: 32,
+                          ),
                         ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: isIncome
-                                ? const Color(0xFF03DAC6).withOpacity(0.1)
-                                : const Color(0xFFCF6679).withOpacity(0.1),
-                            child: Icon(
-                              isIncome
-                                  ? Icons.arrow_downward
-                                  : Icons.arrow_upward,
-                              color: isIncome
-                                  ? const Color(0xFF03DAC6)
-                                  : const Color(0xFFCF6679),
+                        onDismissed: (direction) {
+                          ref
+                              .read(firestoreServiceProvider)
+                              .deleteTransaction(t.id);
+                        },
+                        child: Card(
+                          color: const Color(0xFF1E1E1E),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: isIncome
+                                  ? const Color(0xFF03DAC6).withOpacity(0.1)
+                                  : const Color(0xFFCF6679).withOpacity(0.1),
+                              child: Icon(
+                                isIncome
+                                    ? Icons.arrow_downward
+                                    : Icons.arrow_upward,
+                                color: isIncome
+                                    ? const Color(0xFF03DAC6)
+                                    : const Color(0xFFCF6679),
+                              ),
                             ),
-                          ),
-                          title: Text(
-                            t.category,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                            title: Text(
+                              t.category,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          subtitle: Text(
-                            DateFormat('MMM d, y').format(t.date),
-                            style: const TextStyle(color: Colors.white54),
-                          ),
-                          trailing: Text(
-                            '${isIncome ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              color: isIncome
-                                  ? const Color(0xFF03DAC6)
-                                  : const Color(0xFFCF6679),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                            subtitle: Text(
+                              DateFormat('MMM d, y').format(t.date),
+                              style: const TextStyle(color: Colors.white54),
+                            ),
+                            trailing: Text(
+                              '${isIncome ? '+' : '-'}\$${t.amount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: isIncome
+                                    ? const Color(0xFF03DAC6)
+                                    : const Color(0xFFCF6679),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
@@ -130,7 +158,6 @@ class DashboardScreen extends ConsumerWidget {
         ),
       ),
 
-      // Floating Action Button to Add Data
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFFBB86FC),
         child: const Icon(Icons.add, color: Colors.black),

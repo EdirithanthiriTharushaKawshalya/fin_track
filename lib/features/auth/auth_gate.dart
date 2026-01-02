@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../dashboard/dashboard_screen.dart';
+import '../home_shell.dart'; // Import the shell
+// import '../dashboard/dashboard_screen.dart'; // Remove or comment this out
 import 'login_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -20,7 +21,7 @@ class AuthGate extends StatelessWidget {
 
         // If we have a user, show the Dashboard
         if (snapshot.hasData) {
-          return const DashboardScreen();
+          return const HomeShell(); // Change this from DashboardScreen()
         }
 
         // Otherwise, show Login

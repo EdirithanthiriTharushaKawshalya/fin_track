@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/transaction_model.dart';
+import '../models/goal_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -43,6 +44,58 @@ class FirestoreService {
           (snapshot) => snapshot.docs
               .map((doc) => TransactionModel.fromFirestore(doc))
               .toList(),
+        );
+  }
+
+  // Delete a Transaction
+  Future<void> deleteTransaction(String id) async {
+    try {
+      await _db.collection('transactions').doc(id).delete();
+    } catch (e) {
+      throw Exception('Failed to delete transaction: $e');
+    }
+  }
+
+  // --- GOALS SECTION ---
+
+  // Add a Goal
+  Future<void> addGoal({
+    required String title,
+    required double targetAmount,
+    required DateTime deadline,
+  }) async {
+    await _db.collection('goals').add({
+      'userId': _userId,
+      'title': title,
+      'targetAmount': targetAmount,
+      'savedAmount': 0.0, // Start with 0
+      'deadline': Timestamp.fromDate(deadline),
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Update Saved Amount (Deposit money into goal)
+  Future<void> updateGoalProgress(String goalId, double newSavedAmount) async {
+    await _db.collection('goals').doc(goalId).update({
+      'savedAmount': newSavedAmount,
+    });
+  }
+
+  // Delete Goal
+  Future<void> deleteGoal(String goalId) async {
+    await _db.collection('goals').doc(goalId).delete();
+  }
+
+  // Stream Goals
+  Stream<List<GoalModel>> getGoals() {
+    return _db
+        .collection('goals')
+        .where('userId', isEqualTo: _userId)
+        .orderBy('deadline', descending: false) // Soonest deadline first
+        .snapshots()
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => GoalModel.fromFirestore(doc)).toList(),
         );
   }
 }
