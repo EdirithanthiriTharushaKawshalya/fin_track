@@ -127,8 +127,18 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           onDismissed: (direction) {
-                            // Assuming you have the delete method in your provider or service
-                            // ref.read(firestoreServiceProvider).deleteTransaction(t.id);
+                            // Pass the WHOLE transaction object, not just ID
+                            ref
+                                .read(firestoreServiceProvider)
+                                .deleteTransaction(t);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Transaction reversed & money refunded',
+                                ),
+                              ),
+                            );
                           },
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 12),

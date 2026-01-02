@@ -51,64 +51,114 @@ class AccountsScreen extends ConsumerWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final acc = accounts[index];
-              return Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  // Glassmorphism Gradient based on card color
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(acc.colorCode).withOpacity(0.8),
-                      Color(acc.colorCode).withOpacity(0.4),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(acc.colorCode).withOpacity(0.2),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(
-                          acc.type == 'bank'
-                              ? Icons.account_balance
-                              : Icons.account_balance_wallet,
-                          color: Colors.white,
-                          size: 30,
+
+              return Dismissible(
+                key: Key(acc.id),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (direction) async {
+                  // Show confirmation dialog before deleting an Asset (Safe practice)
+                  return await showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: const Color(0xFF1E1E1E),
+                      title: const Text(
+                        "Delete Account?",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      content: const Text(
+                        "This will verify you want to remove this asset.",
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      actions: [
+                        TextButton(
+                          child: const Text("CANCEL"),
+                          onPressed: () => Navigator.of(ctx).pop(false),
                         ),
-                        const Icon(Icons.more_horiz, color: Colors.white70),
+                        TextButton(
+                          child: const Text(
+                            "DELETE",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      acc.name,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                        letterSpacing: 1,
-                      ),
+                  );
+                },
+                onDismissed: (_) {
+                  ref.read(firestoreServiceProvider).deleteAccount(acc.id);
+                },
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  margin: const EdgeInsets.only(
+                    bottom: 16,
+                  ), // Match container margin
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.delete, color: Colors.red),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    // Glassmorphism Gradient based on card color
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(acc.colorCode).withOpacity(0.8),
+                        Color(acc.colorCode).withOpacity(0.4),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(height: 4),
-                    // UPDATED: Using CurrencyFormatter
-                    Text(
-                      CurrencyFormatter.format(acc.currentBalance),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(acc.colorCode).withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Icon(
+                            acc.type == 'bank'
+                                ? Icons.account_balance
+                                : Icons.account_balance_wallet,
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                          const Icon(Icons.more_horiz, color: Colors.white70),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        acc.name,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // UPDATED: Using CurrencyFormatter
+                      Text(
+                        CurrencyFormatter.format(acc.currentBalance),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

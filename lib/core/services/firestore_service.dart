@@ -43,6 +43,11 @@ class FirestoreService {
         );
   }
 
+  // DELETE ACCOUNT
+  Future<void> deleteAccount(String id) async {
+    await _db.collection('accounts').doc(id).delete();
+  }
+
   // --- UPDATED TRANSACTION LOGIC (CRITICAL) ---
 
   // We overwrite the old addTransaction to handle Account Balances
@@ -122,13 +127,34 @@ class FirestoreService {
         );
   }
 
-  // Delete a Transaction
-  Future<void> deleteTransaction(String id) async {
-    try {
-      await _db.collection('transactions').doc(id).delete();
-    } catch (e) {
-      throw Exception('Failed to delete transaction: $e');
+  // --- TRANSACTIONS (Advanced Logic) ---
+
+  // DELETE TRANSACTION (With Refund Logic)
+  Future<void> deleteTransaction(TransactionModel transaction) async {
+    final batch = _db.batch();
+
+    // 1. Delete the transaction record
+    final transactionRef = _db.collection('transactions').doc(transaction.id);
+    batch.delete(transactionRef);
+
+    // 2. Reverse the money (Refund the account)
+    if (transaction.accountId != null && transaction.accountId!.isNotEmpty) {
+      final accountRef = _db.collection('accounts').doc(transaction.accountId);
+
+      if (transaction.type == 'income') {
+        // If we delete an INCOME, we SUBTRACT money from account
+        batch.update(accountRef, {
+          'currentBalance': FieldValue.increment(-transaction.amount),
+        });
+      } else {
+        // If we delete an EXPENSE, we ADD money back to account
+        batch.update(accountRef, {
+          'currentBalance': FieldValue.increment(transaction.amount),
+        });
+      }
     }
+
+    await batch.commit();
   }
 
   // --- GOALS SECTION ---

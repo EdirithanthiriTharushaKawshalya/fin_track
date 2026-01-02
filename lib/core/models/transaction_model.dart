@@ -8,6 +8,7 @@ class TransactionModel {
   final String category; // e.g., 'Food', 'Salary', 'Rent'
   final DateTime date;
   final String? note;
+  final String? accountId; // NEW: Added accountId field
 
   TransactionModel({
     required this.id,
@@ -17,6 +18,7 @@ class TransactionModel {
     required this.category,
     required this.date,
     this.note,
+    this.accountId, // NEW: Added accountId parameter
   });
 
   // Convert Firebase Document to Dart Object
@@ -30,6 +32,7 @@ class TransactionModel {
       category: data['category'] ?? 'General',
       date: (data['date'] as Timestamp).toDate(),
       note: data['note'],
+      accountId: data['accountId'], // NEW: Include accountId from Firestore
     );
   }
 
@@ -42,6 +45,7 @@ class TransactionModel {
       'category': category,
       'date': Timestamp.fromDate(date),
       'note': note,
+      'accountId': accountId, // NEW: Include accountId in toMap
     };
   }
 }
