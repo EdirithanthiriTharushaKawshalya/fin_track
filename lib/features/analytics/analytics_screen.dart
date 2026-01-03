@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../dashboard/widgets/spending_chart.dart';
 import '../dashboard/transaction_provider.dart';
+import '../dashboard/widgets/spending_chart.dart';
 import '../../core/utils/currency_formatter.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
@@ -24,7 +24,7 @@ class AnalyticsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
         data: (transactions) {
-          // 1. Filter Expenses Only
+          // 1. Filter Expenses
           final expenses = transactions
               .where((t) => t.type == 'expense')
               .toList();
@@ -37,7 +37,7 @@ class AnalyticsScreen extends ConsumerWidget {
             );
           }
 
-          // 2. Calculate Totals by Category
+          // 2. Group & Total
           final Map<String, double> categoryTotals = {};
           double totalExpense = 0;
           for (var t in expenses) {
@@ -46,16 +46,27 @@ class AnalyticsScreen extends ConsumerWidget {
             totalExpense += t.amount;
           }
 
-          // 3. Convert to List & Sort
+          // 3. SORT: Highest First (Must match the Chart logic!)
           final sortedCategories = categoryTotals.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value)); // Highest first
+            ..sort((a, b) => b.value.compareTo(a.value));
+
+          // 4. Color Palette (Must match the Chart palette!)
+          final colors = [
+            const Color(0xFFBB86FC), // Purple
+            const Color(0xFF03DAC6), // Teal
+            const Color(0xFFCF6679), // Red
+            Colors.orangeAccent,
+            Colors.blueAccent,
+            Colors.greenAccent,
+            Colors.yellowAccent,
+          ];
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // CHART SECTION
+                // The Chart
                 const SpendingChart(),
 
                 const SizedBox(height: 32),
@@ -70,9 +81,16 @@ class AnalyticsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // BREAKDOWN LIST
-                ...sortedCategories.map((entry) {
+                // The List (Now with matching colors)
+                // We use .asMap() to get the index so we can pick the right color
+                ...sortedCategories.asMap().entries.map((mapEntry) {
+                  final index = mapEntry.key;
+                  final entry = mapEntry.value;
+
                   final percentage = (entry.value / totalExpense);
+                  // Assign color based on index, looping if we run out of colors
+                  final color = colors[index % colors.length];
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
@@ -86,12 +104,26 @@ class AnalyticsScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              entry.key,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                // Colored Dot indicator
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  entry.key,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                             Text(
                               CurrencyFormatter.format(entry.value),
@@ -99,14 +131,14 @@ class AnalyticsScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        // Mini Progress Bar
+                        const SizedBox(height: 12),
+                        // Progress Bar matching the color
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: percentage,
                             backgroundColor: Colors.white10,
-                            color: const Color(0xFFBB86FC),
+                            color: color, // <--- Matching Color
                             minHeight: 6,
                           ),
                         ),

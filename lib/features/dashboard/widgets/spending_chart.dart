@@ -18,7 +18,6 @@ class SpendingChart extends ConsumerWidget {
         final expenses = transactions
             .where((t) => t.type == 'expense')
             .toList();
-
         if (expenses.isEmpty) return const SizedBox.shrink();
 
         // 2. Group by Category
@@ -31,20 +30,25 @@ class SpendingChart extends ConsumerWidget {
           totalExpense += t.amount;
         }
 
-        // 3. Create Chart Data
-        // Define some neon colors for the futuristic look
+        // 3. SORT: Highest Expense First (Critical for color matching)
+        final sortedEntries = categoryTotals.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+        // 4. Define Consistent Palette
         final colors = [
-          const Color(0xFFBB86FC), // Purple
+          const Color(0xFFBB86FC), // Purple (Biggest)
           const Color(0xFF03DAC6), // Teal
           const Color(0xFFCF6679), // Red
-          const Color(0xFF3700B3), // Dark Blue
           Colors.orangeAccent,
+          Colors.blueAccent,
+          Colors.greenAccent,
+          Colors.yellowAccent,
         ];
 
         int colorIndex = 0;
-        final sections = categoryTotals.entries.map((entry) {
+        final sections = sortedEntries.map((entry) {
           final percentage = (entry.value / totalExpense) * 100;
-          final color = colors[colorIndex % colors.length];
+          final color = colors[colorIndex % colors.length]; // Cycle colors
           colorIndex++;
 
           return PieChartSectionData(
@@ -61,13 +65,20 @@ class SpendingChart extends ConsumerWidget {
         }).toList();
 
         return Container(
-          height: 250,
+          height: 300, // Slightly taller
           margin: const EdgeInsets.symmetric(vertical: 24),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: const Color(0xFF1E1E1E),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -80,7 +91,7 @@ class SpendingChart extends ConsumerWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               Expanded(
                 child: PieChart(
                   PieChartData(
