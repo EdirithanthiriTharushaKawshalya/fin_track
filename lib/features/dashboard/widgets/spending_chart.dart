@@ -1,3 +1,4 @@
+import 'package:fin_track/features/dashboard/dashboard_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,18 +10,26 @@ class SpendingChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(transactionStreamProvider);
+    // 1. ADD: Watch the selected date
+    final selectedDate = ref.watch(selectedDateProvider);
 
     return transactionsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
-      data: (transactions) {
-        // 1. Filter only expenses
-        final expenses = transactions
-            .where((t) => t.type == 'expense')
+      data: (allTransactions) {
+        // 2. ADD: Filter transactions for the SELECTED month
+        final expenses = allTransactions
+            .where(
+              (t) =>
+                  t.type == 'expense' &&
+                  t.date.year == selectedDate.year &&
+                  t.date.month == selectedDate.month,
+            )
             .toList();
+
         if (expenses.isEmpty) return const SizedBox.shrink();
 
-        // 2. Group by Category
+        // 3. Group by Category
         final Map<String, double> categoryTotals = {};
         double totalExpense = 0;
 
@@ -30,11 +39,11 @@ class SpendingChart extends ConsumerWidget {
           totalExpense += t.amount;
         }
 
-        // 3. SORT: Highest Expense First (Critical for color matching)
+        // 4. SORT: Highest Expense First (Critical for color matching)
         final sortedEntries = categoryTotals.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
 
-        // 4. Define Consistent Palette
+        // 5. Define Consistent Palette
         final colors = [
           const Color(0xFFBB86FC), // Purple (Biggest)
           const Color(0xFF03DAC6), // Teal

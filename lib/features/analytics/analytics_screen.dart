@@ -1,8 +1,10 @@
+import 'package:fin_track/features/dashboard/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../dashboard/transaction_provider.dart';
 import '../dashboard/widgets/spending_chart.dart';
 import '../../core/utils/currency_formatter.dart';
+import 'package:intl/intl.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -10,6 +12,8 @@ class AnalyticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionAsync = ref.watch(transactionStreamProvider);
+    // 1. ADD: Watch the global selected date from the Dashboard
+    final selectedDate = ref.watch(selectedDateProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -23,16 +27,24 @@ class AnalyticsScreen extends ConsumerWidget {
       body: transactionAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
-        data: (transactions) {
-          // 1. Filter Expenses
-          final expenses = transactions
+        data: (allTransactions) {
+          // 2. ADD: Filter transactions for the SELECTED month
+          final monthlyTransactions = allTransactions.where((t) {
+            return t.date.year == selectedDate.year &&
+                t.date.month == selectedDate.month;
+          }).toList();
+
+          // 3. UPDATE: Filter ONLY expenses from the monthly list
+          final expenses = monthlyTransactions
               .where((t) => t.type == 'expense')
               .toList();
+
+          // If no expenses in the selected month, show empty state
           if (expenses.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                "No expenses to analyze.",
-                style: TextStyle(color: Colors.white54),
+                "No expenses in ${DateFormat('MMMM yyyy').format(selectedDate)}",
+                style: const TextStyle(color: Colors.white54),
               ),
             );
           }
