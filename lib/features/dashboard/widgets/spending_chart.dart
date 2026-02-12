@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../transaction_provider.dart';
 
 class SpendingChart extends ConsumerWidget {
-  const SpendingChart({super.key});
+  final String type; // 'expense' or 'income'
+  const SpendingChart({super.key, required this.type});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,46 +18,56 @@ class SpendingChart extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (allTransactions) {
-        // 2. ADD: Filter transactions for the SELECTED month
-        final expenses = allTransactions
+        // 2. ADD: Filter transactions for the SELECTED month and type
+        final filtered = allTransactions
             .where(
               (t) =>
-                  t.type == 'expense' &&
+                  t.type == type &&
                   t.date.year == selectedDate.year &&
                   t.date.month == selectedDate.month,
             )
             .toList();
 
-        if (expenses.isEmpty) return const SizedBox.shrink();
+        if (filtered.isEmpty) return const SizedBox.shrink();
 
         // 3. Group by Category
         final Map<String, double> categoryTotals = {};
-        double totalExpense = 0;
+        double total = 0;
 
-        for (var t in expenses) {
+        for (var t in filtered) {
           categoryTotals[t.category] =
               (categoryTotals[t.category] ?? 0) + t.amount;
-          totalExpense += t.amount;
+          total += t.amount;
         }
 
-        // 4. SORT: Highest Expense First (Critical for color matching)
+        // 4. SORT: Highest First (Critical for color matching)
         final sortedEntries = categoryTotals.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
 
-        // 5. Define Consistent Palette
-        final colors = [
-          const Color(0xFFBB86FC), // Purple (Biggest)
-          const Color(0xFF03DAC6), // Teal
-          const Color(0xFFCF6679), // Red
-          Colors.orangeAccent,
-          Colors.blueAccent,
-          Colors.greenAccent,
-          Colors.yellowAccent,
-        ];
+        // 5. Define Consistent Palette - Different palettes for expense vs income
+        final colors = type == 'expense'
+            ? [
+                const Color(0xFFBB86FC), // Purple (Biggest)
+                const Color(0xFFCF6679), // Red
+                Colors.orangeAccent,
+                Colors.pinkAccent,
+                Colors.deepPurpleAccent,
+                Colors.redAccent,
+                Colors.amber,
+              ]
+            : [
+                const Color(0xFF03DAC6), // Teal (Biggest)
+                Colors.greenAccent,
+                Colors.lightGreenAccent,
+                Colors.lightBlueAccent,
+                Colors.cyanAccent,
+                Colors.tealAccent,
+                Colors.limeAccent,
+              ];
 
         int colorIndex = 0;
         final sections = sortedEntries.map((entry) {
-          final percentage = (entry.value / totalExpense) * 100;
+          final percentage = (entry.value / total) * 100;
           final color = colors[colorIndex % colors.length]; // Cycle colors
           colorIndex++;
 
@@ -91,9 +102,9 @@ class SpendingChart extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              const Text(
-                'SPENDING BREAKDOWN',
-                style: TextStyle(
+              Text(
+                type == 'expense' ? 'EXPENSE BREAKDOWN' : 'INCOME BREAKDOWN',
+                style: const TextStyle(
                   color: Colors.white54,
                   letterSpacing: 1.2,
                   fontSize: 12,
