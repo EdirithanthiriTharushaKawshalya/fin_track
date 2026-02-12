@@ -4,18 +4,12 @@ import '../transaction_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
 class BalanceCard extends ConsumerWidget {
-  // REMOVED: The manual double parameters.
-  // We let the widget fetch its own data from the provider.
-  const BalanceCard({
-    super.key,
-    required double totalBalance,
-    required double income,
-    required double expense,
-  });
+  // CLEANED CONSTRUCTOR: No longer accepts manual doubles.
+  const BalanceCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Listen to the recalculated math provider
+    // This watches the updated portfolioProvider we fixed above
     final portfolio = ref.watch(portfolioProvider);
 
     final balance = portfolio['balance'] as double;

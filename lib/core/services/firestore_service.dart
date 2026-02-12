@@ -158,6 +158,41 @@ class FirestoreService {
     await batch.commit();
   }
 
+  // --- TRANSFER MONEY BETWEEN ACCOUNTS ---
+
+  Future<void> transferMoney({
+    required String fromAccountId,
+    required String toAccountId,
+    required double amount,
+  }) async {
+    final batch = _db.batch();
+
+    final fromRef = _db.collection('accounts').doc(fromAccountId);
+    final toRef = _db.collection('accounts').doc(toAccountId);
+
+    // 1. Deduct from Source
+    batch.update(fromRef, {'currentBalance': FieldValue.increment(-amount)});
+
+    // 2. Add to Destination
+    batch.update(toRef, {'currentBalance': FieldValue.increment(amount)});
+
+    // 3. Optional: Create a "Transfer" transaction record for history
+    final transferLogRef = _db.collection('transactions').doc();
+    batch.set(transferLogRef, {
+      'userId': _userId,
+      'amount': amount,
+      'type': 'transfer', // A third type specifically for transfers
+      'category': 'Transfer',
+      'date': Timestamp.now(),
+      'note': 'Internal Transfer',
+      'fromAccountId': fromAccountId,
+      'toAccountId': toAccountId,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
   // --- GOALS SECTION ---
 
   // Add a Goal

@@ -14,7 +14,9 @@ final transactionStreamProvider = StreamProvider<List<TransactionModel>>((ref) {
 // 2. Update the portfolioProvider to watch the selected date
 final portfolioProvider = Provider.autoDispose((ref) {
   final transactionsAsync = ref.watch(transactionStreamProvider);
-  final selectedDate = ref.watch(selectedDateProvider); // <--- WATCH THE DATE
+  final selectedDate = ref.watch(
+    selectedDateProvider,
+  ); // Watch the selected month
 
   return transactionsAsync.when(
     data: (transactions) {
@@ -23,19 +25,22 @@ final portfolioProvider = Provider.autoDispose((ref) {
       double totalBalance = 0;
 
       for (var t in transactions) {
-        // A. Always calculate Total Balance (Your overall Net Worth)
+        // 1. Calculate Global Net Worth (All Time)
+        // Transfers are ignored here because (-X + X = 0)
         if (t.type == 'income') {
           totalBalance += t.amount;
-        } else {
+        } else if (t.type == 'expense') {
           totalBalance -= t.amount;
         }
 
-        // B. ONLY add to Income/Expense if it matches the SELECTED month
+        // 2. Calculate Monthly Stats for the Balance Card
+        // We EXPLICITLY check for 'income' and 'expense' only.
+        // This ensures 'transfer' types are skipped for these totals.
         if (t.date.year == selectedDate.year &&
             t.date.month == selectedDate.month) {
           if (t.type == 'income') {
             income += t.amount;
-          } else {
+          } else if (t.type == 'expense') {
             expense += t.amount;
           }
         }

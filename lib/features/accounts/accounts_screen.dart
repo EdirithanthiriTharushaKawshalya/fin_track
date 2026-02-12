@@ -30,6 +30,13 @@ class AccountsScreen extends ConsumerWidget {
             icon: const Icon(Icons.add_card),
             onPressed: () => _showAddAccountDialog(context, ref),
           ),
+          IconButton(
+            icon: const Icon(
+              Icons.swap_horiz_rounded,
+              color: Color(0xFFBB86FC),
+            ),
+            onPressed: () => _showTransferDialog(context, ref),
+          ),
         ],
       ),
       body: accountsAsync.when(
@@ -134,7 +141,6 @@ class AccountsScreen extends ConsumerWidget {
                             color: Colors.white,
                             size: 30,
                           ),
-                          const Icon(Icons.more_horiz, color: Colors.white70),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -247,6 +253,112 @@ class AccountsScreen extends ConsumerWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  void _showTransferDialog(BuildContext context, WidgetRef ref) {
+    final amountCtrl = TextEditingController();
+    final accounts = ref.read(accountsStreamProvider).value ?? [];
+
+    if (accounts.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Add at least two accounts to transfer.")),
+      );
+      return;
+    }
+
+    String fromAccId = accounts.first.id;
+    String toAccId = accounts.last.id;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: const Text(
+            'Internal Transfer',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // FROM dropdown
+              DropdownButtonFormField<String>(
+                value: fromAccId,
+                dropdownColor: const Color(0xFF2C2C2C),
+                decoration: const InputDecoration(labelText: 'From'),
+                items: accounts
+                    .map(
+                      (acc) => DropdownMenuItem(
+                        value: acc.id,
+                        child: Text(
+                          acc.name,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => fromAccId = val!),
+              ),
+              const Icon(Icons.arrow_downward, color: Colors.white24, size: 16),
+              // TO dropdown
+              DropdownButtonFormField<String>(
+                value: toAccId,
+                dropdownColor: const Color(0xFF2C2C2C),
+                decoration: const InputDecoration(labelText: 'To'),
+                items: accounts
+                    .map(
+                      (acc) => DropdownMenuItem(
+                        value: acc.id,
+                        child: Text(
+                          acc.name,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => toAccId = val!),
+              ),
+              TextField(
+                controller: amountCtrl,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Amount',
+                  prefixText: 'Rs ',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCEL'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFBB86FC),
+              ),
+              onPressed: () async {
+                if (fromAccId == toAccId) return; // Basic validation
+                final amount = double.tryParse(amountCtrl.text) ?? 0;
+                await ref
+                    .read(firestoreServiceProvider)
+                    .transferMoney(
+                      fromAccountId: fromAccId,
+                      toAccountId: toAccId,
+                      amount: amount,
+                    );
+                Navigator.pop(context);
+              },
+              child: const Text(
+                'TRANSFER',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

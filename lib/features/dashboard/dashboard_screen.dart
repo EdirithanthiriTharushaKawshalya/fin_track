@@ -139,12 +139,8 @@ class DashboardScreen extends ConsumerWidget {
 
                   const SizedBox(height: 24),
 
-                  // 2. The Balance Card with filtered data
-                  BalanceCard(
-                    totalBalance: totalBalance, // Keeps real-time balance
-                    income: income, // Changes based on month
-                    expense: expense, // Changes based on month
-                  ),
+                  // 2. The Balance Card with filtered data - UPDATED: No longer need to pass parameters!
+                  const BalanceCard(),
 
                   const SizedBox(height: 32),
 
@@ -191,6 +187,15 @@ class DashboardScreen extends ConsumerWidget {
                             itemBuilder: (context, index) {
                               final t = monthlyTransactions[index];
                               final isIncome = t.type == 'income';
+                              final isExpense = t.type == 'expense';
+                              final isTransfer = t.type == 'transfer';
+
+                              // Professional UI touch: Neutral color for transfers
+                              final color = isTransfer
+                                  ? Colors.white54
+                                  : (isIncome
+                                        ? const Color(0xFF03DAC6)
+                                        : const Color(0xFFCF6679));
 
                               return Dismissible(
                                 key: Key(t.id),
@@ -239,22 +244,24 @@ class DashboardScreen extends ConsumerWidget {
                                     leading: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: isIncome
-                                            ? const Color(
-                                                0xFF03DAC6,
-                                              ).withOpacity(0.1)
-                                            : const Color(
-                                                0xFFCF6679,
-                                              ).withOpacity(0.1),
+                                        color: isTransfer
+                                            ? Colors.white.withOpacity(0.05)
+                                            : (isIncome
+                                                  ? const Color(
+                                                      0xFF03DAC6,
+                                                    ).withOpacity(0.1)
+                                                  : const Color(
+                                                      0xFFCF6679,
+                                                    ).withOpacity(0.1)),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
-                                        isIncome
-                                            ? Icons.arrow_downward
-                                            : Icons.arrow_upward,
-                                        color: isIncome
-                                            ? const Color(0xFF03DAC6)
-                                            : const Color(0xFFCF6679),
+                                        isTransfer
+                                            ? Icons.swap_horiz
+                                            : (isIncome
+                                                  ? Icons.arrow_downward
+                                                  : Icons.arrow_upward),
+                                        color: color,
                                         size: 20,
                                       ),
                                     ),
@@ -275,11 +282,9 @@ class DashboardScreen extends ConsumerWidget {
                                       ),
                                     ),
                                     trailing: Text(
-                                      '${isIncome ? '+' : '-'}${CurrencyFormatter.format(t.amount)}',
+                                      '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
                                       style: TextStyle(
-                                        color: isIncome
-                                            ? const Color(0xFF03DAC6)
-                                            : const Color(0xFFCF6679),
+                                        color: color,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
                                       ),
