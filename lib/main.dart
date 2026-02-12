@@ -29,7 +29,6 @@ class FinTrackApp extends StatelessWidget {
           primary: Color(0xFFBB86FC),
           secondary: Color(0xFF03DAC6),
         ),
-        useMaterial3: true,
       ),
       home: const AuthGate(),
     );

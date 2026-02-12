@@ -2,7 +2,6 @@ import 'package:fin_track/features/dashboard/transaction_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/category_model.dart';
-import '../../core/services/firestore_service.dart';
 
 // Provider to fetch categories
 final categoryStreamProvider = StreamProvider<List<CategoryModel>>((ref) {

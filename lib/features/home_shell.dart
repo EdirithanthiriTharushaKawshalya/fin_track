@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dashboard/dashboard_screen.dart';
-import 'goals/goals_screen.dart';
-import 'debts/debts_screen.dart';
 import 'accounts/accounts_screen.dart';
 import 'planning/planning_screen.dart';
 import 'analytics/analytics_screen.dart';
@@ -31,7 +29,7 @@ class _HomeShellState extends State<HomeShell> {
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           indicatorColor: const Color(0xFFBB86FC).withOpacity(0.2),
-          labelTextStyle: MaterialStateProperty.all(
+          labelTextStyle: WidgetStateProperty.all(
             const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,

@@ -4,11 +4,18 @@ import '../transaction_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
 class BalanceCard extends ConsumerWidget {
-  const BalanceCard({super.key});
+  // REMOVED: The manual double parameters.
+  // We let the widget fetch its own data from the provider.
+  const BalanceCard({
+    super.key,
+    required double totalBalance,
+    required double income,
+    required double expense,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Listen to the math provider we just created
+    // Listen to the recalculated math provider
     final portfolio = ref.watch(portfolioProvider);
 
     final balance = portfolio['balance'] as double;
@@ -19,9 +26,8 @@ class BalanceCard extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        // Futuristic Gradient Background
         gradient: const LinearGradient(
-          colors: [Color(0xFFBB86FC), Color(0xFF3700B3)], // Purple to Deep Blue
+          colors: [Color(0xFFBB86FC), Color(0xFF3700B3)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -59,66 +65,56 @@ class BalanceCard extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Income
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.arrow_downward,
-                        color: Color(0xFF03DAC6),
-                        size: 16,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'INCOME',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    CurrencyFormatter.format(income),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              _buildStatColumn(
+                'INCOME',
+                income,
+                const Color(0xFF03DAC6),
+                Icons.arrow_downward,
               ),
-              // Expense
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(
-                        Icons.arrow_upward,
-                        color: Color(0xFFCF6679),
-                        size: 16,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        'EXPENSE',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    CurrencyFormatter.format(expense),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+              _buildStatColumn(
+                'EXPENSE',
+                expense,
+                const Color(0xFFCF6679),
+                Icons.arrow_upward,
+                crossAxis: CrossAxisAlignment.end,
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  // Helper method to keep the code DRY (Don't Repeat Yourself)
+  Widget _buildStatColumn(
+    String label,
+    double value,
+    Color color,
+    IconData icon, {
+    CrossAxisAlignment crossAxis = CrossAxisAlignment.start,
+  }) {
+    return Column(
+      crossAxisAlignment: crossAxis,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ],
+        ),
+        Text(
+          CurrencyFormatter.format(value),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }
