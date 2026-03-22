@@ -1,11 +1,12 @@
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui';
 import '../../core/models/debt_model.dart';
-import '../../core/utils/currency_formatter.dart'; // Import the formatter
+import '../../core/utils/currency_formatter.dart';
 
-// Provider for Debts
 final debtsStreamProvider = StreamProvider<List<DebtModel>>((ref) {
   return ref.watch(firestoreServiceProvider).getDebts();
 });
@@ -17,14 +18,25 @@ class DebtsScreen extends ConsumerStatefulWidget {
   ConsumerState<DebtsScreen> createState() => _DebtsScreenState();
 }
 
-class _DebtsScreenState extends ConsumerState<DebtsScreen>
-    with SingleTickerProviderStateMixin {
+class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    // Add listener to update UI when swiping between tabs
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,100 +44,145 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen>
     final debtsAsync = ref.watch(debtsStreamProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text(
-          'Debt Manager',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFFBB86FC),
-          labelColor: const Color(0xFFBB86FC),
-          unselectedLabelColor: Colors.white54,
-          tabs: const [
-            Tab(text: 'I OWE (Borrowed)'),
-            Tab(text: 'OWED TO ME (Lent)'),
+      backgroundColor: const Color(0xFF080808),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Owes & Owed',
+                style: GoogleFonts.spaceGrotesk(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // --- FLOATING ROUNDED TAB SECTION ---
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                height: 50,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.03),
+                  borderRadius: BorderRadius.circular(100), // Fully rounded pill
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    color: _tabController.index == 0 
+                        ? const Color(0xFFCF6679).withOpacity(0.2) 
+                        : const Color(0xFF03DAC6).withOpacity(0.2),
+                  ),
+                  labelColor: _tabController.index == 0 
+                      ? const Color(0xFFCF6679) 
+                      : const Color(0xFF03DAC6),
+                  unselectedLabelColor: Colors.white24,
+                  labelStyle: GoogleFonts.inter(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 0.8,
+                  ),
+                  dividerColor: Colors.transparent, // Removes the default line
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  tabs: const [
+                    Tab(text: 'I OWE'),
+                    Tab(text: 'OWED TO ME'),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+
+            Expanded(
+              child: debtsAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
+                error: (err, _) => Center(child: Text('Couldn\'t load records', style: const TextStyle(color: Colors.redAccent))),
+                data: (allDebts) {
+                  final borrowed = allDebts.where((d) => d.type == 'borrowed').toList();
+                  final lent = allDebts.where((d) => d.type == 'lent').toList();
+
+                  return TabBarView(
+                    controller: _tabController,
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildDebtList(borrowed, isBorrowed: true),
+                      _buildDebtList(lent, isBorrowed: false),
+                    ],
+                  );
+                },
+              ),
+            ),
           ],
         ),
-      ),
-      body: debtsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
-          child: Text('Error: $err', style: const TextStyle(color: Colors.red)),
-        ),
-        data: (allDebts) {
-          // Filter the lists
-          final borrowed = allDebts.where((d) => d.type == 'borrowed').toList();
-          final lent = allDebts.where((d) => d.type == 'lent').toList();
-
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildDebtList(borrowed, isBorrowed: true),
-              _buildDebtList(lent, isBorrowed: false),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFBB86FC),
-        child: const Icon(Icons.add, color: Colors.black),
-        onPressed: () => _showAddDebtDialog(context),
       ),
     );
   }
 
   Widget _buildDebtList(List<DebtModel> debts, {required bool isBorrowed}) {
     if (debts.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          "Clean slate. No records.",
-          style: TextStyle(color: Colors.white54),
+          "All settled up! No records here.",
+          style: GoogleFonts.inter(color: Colors.white10),
         ),
       );
     }
 
+    final Color color = isBorrowed ? const Color(0xFFCF6679) : const Color(0xFF03DAC6);
+
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       itemCount: debts.length,
+      physics: const BouncingScrollPhysics(),
       itemBuilder: (context, index) {
         final debt = debts[index];
-        final color = isBorrowed
-            ? const Color(0xFFCF6679)
-            : const Color(0xFF03DAC6);
 
         return Dismissible(
           key: Key(debt.id),
           direction: DismissDirection.endToStart,
           background: Container(
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            color: Colors.green.withOpacity(0.2), // Green for "Settled"
-            child: const Icon(Icons.check, color: Colors.green),
+            padding: const EdgeInsets.only(right: 24),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.greenAccent.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(28),
+            ),
+            child: const Icon(Icons.check_circle_outline, color: Colors.greenAccent),
           ),
-          onDismissed: (_) {
-            ref.read(firestoreServiceProvider).deleteDebt(debt.id);
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('Marked as Settled')));
-          },
+          onDismissed: (_) => ref.read(firestoreServiceProvider).deleteDebt(debt.id),
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withOpacity(0.3)),
+              color: const Color(0xFF121212),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withOpacity(0.03)),
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: color.withOpacity(0.1),
-                  child: Text(
-                    debt.personName[0].toUpperCase(),
-                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      debt.personName.isNotEmpty ? debt.personName[0].toUpperCase() : '?',
+                      style: GoogleFonts.inter(color: color, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -135,26 +192,25 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen>
                     children: [
                       Text(
                         debt.personName,
-                        style: const TextStyle(
+                        style: GoogleFonts.inter(
                           color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        'Due: ${DateFormat('MMM d').format(debt.dueDate)}',
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 12,
-                        ),
+                        isBorrowed 
+                            ? 'Due to pay: ${DateFormat('MMM d').format(debt.dueDate)}' 
+                            : 'Expecting by: ${DateFormat('MMM d').format(debt.dueDate)}',
+                        style: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
                       ),
                     ],
                   ),
                 ),
-                // UPDATED: Using CurrencyFormatter
                 Text(
                   CurrencyFormatter.format(debt.amount),
-                  style: TextStyle(
+                  style: GoogleFonts.spaceGrotesk(
                     color: color,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -165,92 +221,6 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen>
           ),
         );
       },
-    );
-  }
-
-  void _showAddDebtDialog(BuildContext context) {
-    final nameCtrl = TextEditingController();
-    final amountCtrl = TextEditingController();
-    // Default to the current tab
-    String type = _tabController.index == 0 ? 'borrowed' : 'lent';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Text('New Record', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: 'Person Name'),
-            ),
-            TextField(
-              controller: amountCtrl,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              // UPDATED: Added prefixText for input
-              decoration: const InputDecoration(
-                labelText: 'Amount',
-                prefixText: 'Rs ',
-                prefixStyle: TextStyle(color: Colors.white70),
-              ),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: type,
-              dropdownColor: const Color(0xFF2C2C2C),
-              items: const [
-                DropdownMenuItem(
-                  value: 'borrowed',
-                  child: Text(
-                    'I Borrowed (Owe)',
-                    style: TextStyle(color: Color(0xFFCF6679)),
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'lent',
-                  child: Text(
-                    'I Lent (Owed to me)',
-                    style: TextStyle(color: Color(0xFF03DAC6)),
-                  ),
-                ),
-              ],
-              onChanged: (val) => type = val!,
-              decoration: const InputDecoration(labelText: 'Type'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            child: const Text('CANCEL'),
-            onPressed: () => Navigator.pop(context),
-          ),
-          TextButton(
-            child: const Text(
-              'SAVE',
-              style: TextStyle(color: Color(0xFFBB86FC)),
-            ),
-            onPressed: () {
-              if (nameCtrl.text.isNotEmpty && amountCtrl.text.isNotEmpty) {
-                ref
-                    .read(firestoreServiceProvider)
-                    .addDebt(
-                      personName: nameCtrl.text,
-                      amount: double.parse(amountCtrl.text),
-                      type: type,
-                      dueDate: DateTime.now().add(
-                        const Duration(days: 14),
-                      ), // Default 2 weeks
-                    );
-                Navigator.pop(context);
-              }
-            },
-          ),
-        ],
-      ),
     );
   }
 }

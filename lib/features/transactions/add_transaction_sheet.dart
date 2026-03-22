@@ -78,18 +78,38 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             ),
             const SizedBox(height: 16),
             
+            // CATEGORY SECTION WITH ADD/MANAGE BUTTON
             _buildInputWrapper(
               child: categoryAsync.when(
                 data: (cats) {
                   final filtered = cats.where((c) => c.type == _type).toList();
                   final currentCat = filtered.any((c) => c.name == _category) ? _category : (filtered.isNotEmpty ? filtered.first.name : null);
-                  return DropdownButtonFormField<String>(
-                    value: currentCat,
-                    dropdownColor: const Color(0xFF121212),
-                    style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
-                    items: filtered.map((c) => DropdownMenuItem(value: c.name, child: Text(c.name))).toList(),
-                    onChanged: (val) => setState(() => _category = val!),
-                    decoration: _fieldDecoration('Category', Icons.category_rounded),
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: currentCat,
+                          dropdownColor: const Color(0xFF121212),
+                          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+                          items: filtered.map((c) => DropdownMenuItem(value: c.name, child: Text(c.name))).toList(),
+                          onChanged: (val) => setState(() => _category = val!),
+                          decoration: _fieldDecoration('Category', Icons.category_rounded),
+                        ),
+                      ),
+                      // New Professional "Manage" button for categories
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: TextButton.icon(
+                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CategoriesScreen())),
+                          icon: Icon(Icons.settings_outlined, color: activeColor.withOpacity(0.7), size: 16),
+                          label: Text("Manage", style: GoogleFonts.inter(color: activeColor.withOpacity(0.7), fontSize: 11, fontWeight: FontWeight.bold)),
+                          style: TextButton.styleFrom(
+                            backgroundColor: activeColor.withOpacity(0.05),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
                 loading: () => const LinearProgressIndicator(color: Colors.white10),
@@ -114,8 +134,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: activeColor,
                   foregroundColor: Colors.black,
-                  // Changed to a much rounder pill shape
-                  shape: const StadiumBorder(),
+                  shape: const StadiumBorder(), // Fully rounded pill shape
                   elevation: 0,
                 ),
                 child: _isLoading 
@@ -137,7 +156,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03), 
-        borderRadius: BorderRadius.circular(20), // Rounder container
+        borderRadius: BorderRadius.circular(20), 
       ),
       child: Row(
         children: [
@@ -152,13 +171,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final isSelected = _type == value;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _type = value),
+        onTap: () => setState(() {
+          _type = value;
+          // Reset category to a valid one for the new type
+          _category = 'Food'; 
+        }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected ? color : Colors.transparent, 
-            borderRadius: BorderRadius.circular(16), // Rounder toggle buttons
+            borderRadius: BorderRadius.circular(16), 
           ),
           child: Text(
             label, 
@@ -178,7 +201,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
-        borderRadius: BorderRadius.circular(24), // Matches the card rounding from other screens
+        borderRadius: BorderRadius.circular(24), 
         border: Border.all(color: Colors.white.withOpacity(0.03)),
       ),
       child: child,
