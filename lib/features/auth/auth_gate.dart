@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../home_shell.dart'; // Import the shell
-// import '../dashboard/dashboard_screen.dart'; // Remove or comment this out
+import '../home_shell.dart'; 
 import 'login_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -12,19 +11,16 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // If the stream is waiting, show a loader
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // If we have a user, show the Dashboard
         if (snapshot.hasData) {
-          return const HomeShell(); // Change this from DashboardScreen()
+          return const HomeShell(); 
         }
 
-        // Otherwise, show Login
         return const LoginScreen();
       },
     );

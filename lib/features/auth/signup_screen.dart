@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -12,38 +13,30 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController(); // Extra security
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
 
   Future<void> _signUp() async {
-    // 1. Basic Validation
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match!'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Access Keys do not match.')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
-      // 2. Create User in Firebase
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
-      // Success is handled by the "Auth Gate" (we will build this next)
-      // So we don't need to manually navigate here.
+      if (mounted) Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message ?? 'Registration Failed'),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.redAccent.withOpacity(0.8),
           ),
         );
       }
@@ -52,33 +45,33 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  Widget _buildTextField({
+  Widget _buildGlassInput({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     bool isPassword = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(
-            icon,
-            color: const Color(0xFF03DAC6),
-          ), // Teal for Signup
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white54),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30), // Increased roundness
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(30), // Increased roundness
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: isPassword,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: const Color(0xFF03DAC6), size: 20),
+              labelText: label,
+              labelStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            ),
           ),
         ),
       ),
@@ -88,80 +81,111 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFF0A0A0A),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'NEW ACCOUNT',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.orbitron(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 2.0,
-                ),
+      body: Stack(
+        children: [
+          Positioned(
+            bottom: -100,
+            left: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                // Reduced visibility to match login page
+                color: const Color(0xFF03DAC6).withOpacity(0.05), 
               ),
-              const SizedBox(height: 48),
-
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email',
-                icon: Icons.email_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                icon: Icons.lock_outlined,
-                isPassword: true,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _confirmPasswordController,
-                label: 'Confirm Password',
-                icon: Icons.lock_reset,
-                isPassword: true,
-              ),
-
-              const SizedBox(height: 32),
-
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signUp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF03DAC6), // Teal
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.security_update_good_rounded,
+                    size: 64,
+                    color: Color(0xFF03DAC6),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'CREATE IDENTITY',
+                    style: GoogleFonts.inter(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 4,
                     ),
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.black)
-                      : const Text(
-                          'CREATE ACCOUNT',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'INITIALIZING NEW DATABASE ENTRY',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: Colors.white38,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  _buildGlassInput(
+                    controller: _emailController,
+                    label: 'System ID (Email)',
+                    icon: Icons.mail_outline_rounded,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildGlassInput(
+                    controller: _passwordController,
+                    label: 'New Access Key',
+                    icon: Icons.lock_outline_rounded,
+                    isPassword: true,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildGlassInput(
+                    controller: _confirmPasswordController,
+                    label: 'Confirm Access Key',
+                    icon: Icons.shield_outlined,
+                    isPassword: true,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 60,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signUp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF03DAC6),
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30), // Increased roundness
                         ),
-                ),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.black)
+                          : Text(
+                              'INITIALIZE ACCOUNT',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

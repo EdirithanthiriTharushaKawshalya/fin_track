@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
-import 'signup_screen.dart'; // Added import
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,12 +12,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Controllers capture what the user types
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // This function handles the login logic
   Future<void> _signIn() async {
     setState(() => _isLoading = true);
     try {
@@ -24,19 +23,18 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
-      // If successful, we will navigate to the Dashboard (created later)
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login Successful!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Identity Verified. Access Granted.')),
+        );
       }
     } on FirebaseAuthException catch (e) {
-      // Handle errors (like wrong password)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message ?? 'Auth Error'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: Colors.redAccent.withOpacity(0.8),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -45,31 +43,33 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // A helper to build those futuristic text fields
-  Widget _buildTextField({
+  Widget _buildGlassInput({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     bool isPassword = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Slightly lighter than background
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10), // Subtle border
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: const Color(0xFFBB86FC)), // Neon accent
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white54),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30), // Increased roundness
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(30), // Increased roundness
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: isPassword,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: const Color(0xFFBB86FC), size: 20),
+              labelText: label,
+              labelStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            ),
           ),
         ),
       ),
@@ -79,102 +79,123 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121212), // Deep dark background
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. The Logo/Header
-              Icon(
-                Icons.account_balance_wallet_outlined,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
+      backgroundColor: const Color(0xFF0A0A0A),
+      body: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            right: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFBB86FC).withOpacity(0.15),
               ),
-              const SizedBox(height: 20),
-              Text(
-                'WELCOME BACK',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.orbitron(
-                  // Futuristic Font
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 2.0,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Access your financial command center',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white54),
-              ),
-              const SizedBox(height: 48),
-
-              // 2. The Input Fields
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email Address',
-                icon: Icons.email_outlined,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                icon: Icons.lock_outlined,
-                isPassword: true,
-              ),
-
-              const SizedBox(height: 32),
-
-              // 3. The Login Button (Neon Glow Effect)
-              SizedBox(
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _signIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFBB86FC),
-                    foregroundColor: Colors.black, // Text color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 5,
-                    shadowColor: const Color(0xFFBB86FC).withOpacity(0.5),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.black)
-                      : const Text(
-                          'INITIATE SESSION',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // 4. Register Link
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignupScreen(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Create New Account',
-                  style: TextStyle(color: Color(0xFF03DAC6)), // Secondary Neon
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFBB86FC).withOpacity(0.2),
+                          blurRadius: 40,
+                          spreadRadius: 5,
+                        )
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.blur_on_rounded,
+                      size: 72,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    'FIN-TRACK',
+                    style: GoogleFonts.inter(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 6,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'AUTHENTICATION REQUIRED',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: Colors.white38,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  _buildGlassInput(
+                    controller: _emailController,
+                    label: 'System ID (Email)',
+                    icon: Icons.alternate_email_rounded,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildGlassInput(
+                    controller: _passwordController,
+                    label: 'Access Key',
+                    icon: Icons.lock_open_rounded,
+                    isPassword: true,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 60,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _signIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFBB86FC),
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30), // Increased roundness
+                        ),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.black)
+                          : Text(
+                              'AUTHORIZE',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                      );
+                    },
+                    child: Text(
+                      'Request New Access Account',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF03DAC6),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
