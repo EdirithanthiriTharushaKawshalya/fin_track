@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
-import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../transactions/add_transaction_sheet.dart';
@@ -29,7 +28,7 @@ class DashboardScreen extends ConsumerWidget {
 
           final Map<String, List<dynamic>> groupedTransactions = {};
           for (var t in monthlyTransactions) {
-            final dateKey = DateFormat('yyyy.MM.dd').format(t.date);
+            final dateKey = DateFormat('EEEE, MMM d').format(t.date); 
             groupedTransactions.putIfAbsent(dateKey, () => []).add(t);
           }
 
@@ -46,11 +45,11 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const BalanceCard(), 
                   const SizedBox(height: 32),
-                  _buildSubHeader("DATA_STREAM // ${monthlyTransactions.length} ENTRIES"),
+                  _buildSubHeader("Recent Transactions"),
                   const SizedBox(height: 16),
                   Expanded(
                     child: monthlyTransactions.isEmpty
-                        ? _buildEmptyState(selectedDate)
+                        ? _buildEmptyState()
                         : ListView.builder(
                             key: ValueKey(selectedDate),
                             padding: const EdgeInsets.only(bottom: 100),
@@ -68,8 +67,8 @@ class DashboardScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: Colors.white24)),
-        error: (err, _) => Center(child: Text('ERR_LOG: $err', style: const TextStyle(color: Colors.redAccent))),
+        loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
+        error: (err, _) => Center(child: Text('Something went wrong', style: GoogleFonts.inter(color: Colors.redAccent))),
       ),
       floatingActionButton: _buildFAB(context),
     );
@@ -78,7 +77,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildSubHeader(String text) {
     return Text(
       text,
-      style: GoogleFonts.firaCode(color: Colors.white12, fontWeight: FontWeight.bold, fontSize: 9, letterSpacing: 2),
+      style: GoogleFonts.inter(color: Colors.white38, fontWeight: FontWeight.w600, fontSize: 12, letterSpacing: 0.5),
     );
   }
 
@@ -89,10 +88,10 @@ class DashboardScreen extends ConsumerWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('FIN-TRACK_TERMINAL', style: GoogleFonts.firaCode(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold)),
+            Text('Welcome back,', style: GoogleFonts.inter(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
-            Text(DateFormat('MMMM yyyy').format(selectedDate).toUpperCase(),
-                style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
+            Text(DateFormat('MMMM yyyy').format(selectedDate),
+                style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
           ],
         ),
         _buildNavigationControls(ref, selectedDate),
@@ -104,13 +103,21 @@ class DashboardScreen extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(20), // More rounded corners
+        // Increased to circular radius for a pill shape
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
       child: Row(
         children: [
-          IconButton(icon: const Icon(Icons.keyboard_arrow_left, color: Colors.white), onPressed: () => _updateMonth(ref, current, -1)),
-          IconButton(icon: const Icon(Icons.keyboard_arrow_right, color: Colors.white), onPressed: () => _updateMonth(ref, current, 1)),
+          IconButton(
+            icon: const Icon(Icons.chevron_left, color: Color(0xFFBB86FC)), 
+            onPressed: () => _updateMonth(ref, current, -1)
+          ),
+          Container(height: 20, width: 1, color: Colors.white.withOpacity(0.05)),
+          IconButton(
+            icon: const Icon(Icons.chevron_right, color: Color(0xFFBB86FC)), 
+            onPressed: () => _updateMonth(ref, current, 1)
+          ),
         ],
       ),
     );
@@ -122,7 +129,7 @@ class DashboardScreen extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, top: 24, bottom: 12),
-          child: Text("TIMESTAMP: $date", style: GoogleFonts.firaCode(color: Colors.white24, fontSize: 10)),
+          child: Text(date, style: GoogleFonts.inter(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)),
         ),
         ...items.map((t) => _buildTransactionCard(context, ref, t)).toList(),
       ],
@@ -132,30 +139,48 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildTransactionCard(BuildContext context, WidgetRef ref, dynamic t) {
     final isIncome = t.type == 'income';
     final isTransfer = t.type == 'transfer';
-    // Logic: Red for Expense, Green for Income, Gray for Transfer
-    final Color statusColor = isTransfer ? Colors.grey : (isIncome ? Colors.greenAccent : Colors.redAccent);
+    final Color statusColor = isTransfer ? Colors.white54 : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121212),
-        borderRadius: BorderRadius.circular(24), // Even rounder corners
-        border: Border.all(color: Colors.white.withOpacity(0.03)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: statusColor.withOpacity(0.08), shape: BoxShape.circle),
-          child: Icon(isTransfer ? Icons.sync_alt : (isIncome ? Icons.north_east : Icons.south_west), color: statusColor, size: 18),
+    return Dismissible(
+      key: Key(t.id),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        ref.read(firestoreServiceProvider).deleteTransaction(t);
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 24),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.1),
+          // Matches the card rounding
+          borderRadius: BorderRadius.circular(28),
         ),
-        title: Text(t.category.toUpperCase(), 
-          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.5)),
-        subtitle: Text("${DateFormat('HH:mm').format(t.date)} // ${t.note ?? 'NO_LOG'}", 
-          style: GoogleFonts.firaCode(color: Colors.white24, fontSize: 10)),
-        trailing: Text(
-          '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
-          style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.w900, fontSize: 16),
+        child: const Icon(Icons.delete_outline, color: Colors.redAccent),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121212),
+          // Increased rounding for a modern feel
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.white.withOpacity(0.03)),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(isTransfer ? Icons.sync_alt : (isIncome ? Icons.add : Icons.remove), color: statusColor, size: 20),
+          ),
+          title: Text(t.category, 
+            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+          subtitle: Text(t.note ?? 'No description', 
+            style: GoogleFonts.inter(color: Colors.white24, fontSize: 12)),
+          trailing: Text(
+            '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+            style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.bold, fontSize: 17),
+          ),
         ),
       ),
     );
@@ -163,15 +188,17 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildFAB(BuildContext context) {
     return FloatingActionButton(
-      backgroundColor: Colors.deepPurpleAccent, // Primary purple color
-      shape: const CircleBorder(), // Fully rounded/circular
+      backgroundColor: const Color(0xFFBB86FC),
+      elevation: 4,
+      // Pill-shaped / Fully rounded FAB
+      shape: const StadiumBorder(),
       onPressed: () => showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (context) => const AddTransactionSheet(),
       ),
-      child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+      child: const Icon(Icons.add, color: Colors.black, size: 32),
     );
   }
 
@@ -179,9 +206,9 @@ class DashboardScreen extends ConsumerWidget {
     ref.read(selectedDateProvider.notifier).state = DateTime(current.year, current.month + delta, 1);
   }
 
-  Widget _buildEmptyState(DateTime selectedDate) {
+  Widget _buildEmptyState() {
     return Center(
-      child: Text("BUFFER_EMPTY", style: GoogleFonts.firaCode(color: Colors.white10, fontSize: 12, letterSpacing: 5)),
+      child: Text("No transactions this month", style: GoogleFonts.inter(color: Colors.white10, fontSize: 14)),
     );
   }
 }

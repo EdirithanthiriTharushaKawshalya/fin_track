@@ -1,112 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../transaction_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
 
 class BalanceCard extends ConsumerWidget {
-  // CLEANED CONSTRUCTOR: No longer accepts manual doubles.
   const BalanceCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // This watches the updated portfolioProvider we fixed above
     final portfolio = ref.watch(portfolioProvider);
 
     final balance = portfolio['balance'] as double;
     final income = portfolio['income'] as double;
     final expense = portfolio['expense'] as double;
 
+    const Color primaryAccent = Color(0xFFBB86FC); 
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFBB86FC), Color(0xFF3700B3)],
+        gradient: LinearGradient(
+          colors: [primaryAccent.withOpacity(0.12), const Color(0xFF121212)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: primaryAccent.withOpacity(0.08)),
         boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFBB86FC).withOpacity(0.5),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'TOTAL BALANCE',
-            style: TextStyle(
-              color: Colors.white70,
-              letterSpacing: 1.5,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Icon(Icons.account_balance_wallet, color: primaryAccent.withOpacity(0.02), size: 180),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            CurrencyFormatter.format(balance),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Balance',
+                    style: GoogleFonts.inter(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    CurrencyFormatter.format(balance),
+                    style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 38, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 28),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatColumn('Income', income, const Color(0xFF03DAC6), Icons.arrow_downward),
+                        ),
+                        Container(height: 30, width: 1, color: Colors.white10),
+                        Expanded(
+                          child: _buildStatColumn('Expenses', expense, const Color(0xFFFF0266), Icons.arrow_upward, crossAxis: CrossAxisAlignment.end),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatColumn(
-                'INCOME',
-                income,
-                const Color(0xFF03DAC6),
-                Icons.arrow_downward,
-              ),
-              _buildStatColumn(
-                'EXPENSE',
-                expense,
-                const Color(0xFFCF6679),
-                Icons.arrow_upward,
-                crossAxis: CrossAxisAlignment.end,
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // Helper method to keep the code DRY (Don't Repeat Yourself)
-  Widget _buildStatColumn(
-    String label,
-    double value,
-    Color color,
-    IconData icon, {
-    CrossAxisAlignment crossAxis = CrossAxisAlignment.start,
-  }) {
+  Widget _buildStatColumn(String label, double value, Color color, IconData icon, {CrossAxisAlignment crossAxis = CrossAxisAlignment.start}) {
     return Column(
       crossAxisAlignment: crossAxis,
       children: [
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 16),
+            if (crossAxis == CrossAxisAlignment.start) Icon(icon, color: color, size: 12),
             const SizedBox(width: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
+            Text(label, style: GoogleFonts.inter(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w500)),
+            if (crossAxis == CrossAxisAlignment.end) ...[const SizedBox(width: 4), Icon(icon, color: color, size: 12)],
           ],
         ),
+        const SizedBox(height: 4),
         Text(
           CurrencyFormatter.format(value),
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: GoogleFonts.spaceGrotesk(color: color, fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ],
     );
