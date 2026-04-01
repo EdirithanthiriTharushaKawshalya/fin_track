@@ -17,6 +17,7 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   String _activeType = 'expense';
+  int _touchedIndex = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       backgroundColor: const Color(0xFF080808),
       body: Stack(
         children: [
+          // Ambient Glow
           Positioned(
             top: -50,
             right: -50,
@@ -94,7 +96,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03),
-        // Changed to 100 for a fully rounded/pill shape
         borderRadius: BorderRadius.circular(100),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
@@ -111,13 +112,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final bool isActive = _activeType == type;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _activeType = type),
+        onTap: () => setState(() {
+          _activeType = type;
+          _touchedIndex = -1; // Reset selection on toggle
+        }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isActive ? color : Colors.transparent,
-            // Changed to 100 for fully rounded corners on the inner buttons
             borderRadius: BorderRadius.circular(100),
           ),
           child: Text(
@@ -140,7 +143,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
     if (filtered.isEmpty) {
       return Center(
-        child: Text("No transactions found", style: GoogleFonts.inter(color: Colors.white10)),
+        child: Text("No records found for this month", style: GoogleFonts.inter(color: Colors.white10)),
       );
     }
 
@@ -158,52 +161,127 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       padding: const EdgeInsets.all(24),
       physics: const BouncingScrollPhysics(),
       children: [
-        _buildRadialChart(sortedEntries, total),
+        _buildProfessionalChart(sortedEntries, total),
         const SizedBox(height: 40),
-        Text(
-          'Detailed Breakdown',
-          style: GoogleFonts.inter(color: Colors.white38, fontWeight: FontWeight.w600, fontSize: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'DETAILED BREAKDOWN',
+              style: GoogleFonts.inter(
+                color: Colors.white38, 
+                fontWeight: FontWeight.w800, 
+                fontSize: 10, 
+                letterSpacing: 1.5
+              ),
+            ),
+            Text(
+              '${sortedEntries.length} CATEGORIES',
+              style: GoogleFonts.inter(color: Colors.white10, fontWeight: FontWeight.bold, fontSize: 10),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         ...sortedEntries.asMap().entries.map((e) => _buildCategoryCard(e.value, e.key, total)),
+        const SizedBox(height: 100), // FAB spacing
       ],
     );
   }
 
-  Widget _buildRadialChart(List<MapEntry<String, double>> entries, double total) {
+  Widget _buildProfessionalChart(List<MapEntry<String, double>> entries, double total) {
     return Container(
-      height: 300,
+      height: 320,
+      width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(40),
         border: Border.all(color: Colors.white.withOpacity(0.03)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ]
       ),
       child: Stack(
         alignment: Alignment.center,
         children: [
           PieChart(
             PieChartData(
-              sectionsSpace: 6,
-              centerSpaceRadius: 80,
+              pieTouchData: PieTouchData(
+                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                  setState(() {
+                    if (!event.isInterestedForInteractions ||
+                        pieTouchResponse == null ||
+                        pieTouchResponse.touchedSection == null) {
+                      _touchedIndex = -1;
+                      return;
+                    }
+                    _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                  });
+                },
+              ),
+              borderData: FlBorderData(show: false),
+              sectionsSpace: 4,
+              centerSpaceRadius: 75,
               sections: entries.asMap().entries.map((e) {
+                final isTouched = e.key == _touchedIndex;
+                final double fontSize = isTouched ? 18 : 12;
+                final double radius = isTouched ? 35 : 28;
+                final double opacity = isTouched ? 1.0 : 0.8;
+
                 return PieChartSectionData(
-                  color: _getPaletteColor(e.key),
+                  color: _getPaletteColor(e.key).withOpacity(opacity),
                   value: e.value.value,
-                  title: '', 
-                  radius: 20,
+                  title: isTouched ? '${((e.value.value / total) * 100).toStringAsFixed(0)}%' : '',
+                  radius: radius,
+                  titleStyle: GoogleFonts.spaceGrotesk(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  badgeWidget: isTouched ? _buildChartBadge(e.value.key, _getPaletteColor(e.key)) : null,
+                  badgePositionPercentageOffset: 1.3,
                 );
               }).toList(),
             ),
           ),
+          // Central Info Display
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('TOTAL', style: GoogleFonts.inter(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2)),
-              const SizedBox(height: 4),
               Text(
-                CurrencyFormatter.format(total),
-                style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                _touchedIndex == -1 ? 'TOTAL ${_activeType.toUpperCase()}' : entries[_touchedIndex].key.toUpperCase(),
+                style: GoogleFonts.inter(
+                  color: Colors.white38, 
+                  fontSize: 9, 
+                  fontWeight: FontWeight.w900, 
+                  letterSpacing: 2
+                ),
               ),
+              const SizedBox(height: 6),
+              Text(
+                _touchedIndex == -1 
+                  ? CurrencyFormatter.format(total) 
+                  : CurrencyFormatter.format(entries[_touchedIndex].value),
+                style: GoogleFonts.spaceGrotesk(
+                  color: Colors.white, 
+                  fontSize: 24, 
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+              if (_touchedIndex != -1) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${((entries[_touchedIndex].value / total) * 100).toStringAsFixed(1)}%',
+                  style: GoogleFonts.inter(
+                    color: _getPaletteColor(_touchedIndex), 
+                    fontSize: 12, 
+                    fontWeight: FontWeight.bold
+                  ),
+                ),
+              ]
             ],
           ),
         ],
@@ -211,56 +289,118 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
+  Widget _buildChartBadge(String title, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 10)],
+      ),
+      child: Text(
+        title,
+        style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
   Widget _buildCategoryCard(MapEntry<String, double> entry, int index, double total) {
     final double percentage = (entry.value / total) * 100;
     final Color color = _getPaletteColor(index);
+    final bool isSelected = _touchedIndex == index;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
-        // Updated to be more rounded to match the aesthetic
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.white.withOpacity(0.03)),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isSelected ? color.withOpacity(0.5) : Colors.white.withOpacity(0.03),
+          width: isSelected ? 1.5 : 1,
+        ),
+        boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.1), blurRadius: 15)] : [],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              height: 45,
-              width: 45,
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-              child: Center(
-                child: Text('${percentage.toStringAsFixed(0)}%', style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(entry.key, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    // Fully rounded progress bar
-                    borderRadius: BorderRadius.circular(100),
-                    child: LinearProgressIndicator(
-                      value: percentage / 100,
-                      minHeight: 5,
-                      backgroundColor: Colors.white.withOpacity(0.05),
-                      color: color,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () => setState(() => _touchedIndex = isSelected ? -1 : index),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  height: 48,
+                  width: 48,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1), 
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color.withOpacity(0.2))
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${percentage.toStringAsFixed(0)}%', 
+                      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900)
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        entry.key, 
+                        style: GoogleFonts.inter(
+                          color: Colors.white, 
+                          fontWeight: FontWeight.w700, 
+                          fontSize: 15
+                        )
+                      ),
+                      const SizedBox(height: 10),
+                      Stack(
+                        children: [
+                          Container(
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 800),
+                            height: 6,
+                            width: (MediaQuery.of(context).size.width - 180) * (percentage / 100),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(colors: [color, color.withOpacity(0.5)]),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 4)]
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      CurrencyFormatter.format(entry.value),
+                      style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Text(
+                      'LKR',
+                      style: GoogleFonts.inter(color: Colors.white10, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: 20),
-            Text(
-              CurrencyFormatter.format(entry.value),
-              style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -268,8 +408,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Color _getPaletteColor(int index) {
     final List<Color> palette = _activeType == 'expense' 
-      ? [const Color(0xFFCF6679), const Color(0xFFBB86FC), Colors.orangeAccent, Colors.pinkAccent, Colors.deepPurpleAccent]
-      : [const Color(0xFF03DAC6), Colors.blueAccent, Colors.lightGreenAccent, Colors.cyanAccent, Colors.teal];
+      ? [
+          const Color(0xFFCF6679), // Soft Red
+          const Color(0xFFBB86FC), // Vivid Purple
+          const Color(0xFFFFB74D), // Orange
+          const Color(0xFFF06292), // Pink
+          const Color(0xFF7E57C2), // Deep Purple
+          const Color(0xFFFF8A65), // Deep Orange
+        ]
+      : [
+          const Color(0xFF03DAC6), // Teal
+          const Color(0xFF64B5F6), // Blue
+          const Color(0xFF81C784), // Green
+          const Color(0xFF4DD0E1), // Cyan
+          const Color(0xFFAED581), // Light Green
+          const Color(0xFF4FC3F7), // Light Blue
+        ];
     return palette[index % palette.length];
   }
 }

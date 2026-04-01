@@ -24,8 +24,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoryStreamProvider);
-    final Color activeColor = _activeType == 'income' 
-        ? const Color(0xFF03DAC6) 
+    final Color activeColor = _activeType == 'income'
+        ? const Color(0xFF03DAC6)
         : const Color(0xFFCF6679);
 
     return Scaffold(
@@ -60,10 +60,21 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 const SizedBox(height: 16),
                 Expanded(
                   child: categoriesAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
-                    error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFBB86FC),
+                      ),
+                    ),
+                    error: (err, _) => Center(
+                      child: Text(
+                        'Error: $err',
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
                     data: (allCategories) {
-                      final filtered = allCategories.where((c) => c.type == _activeType).toList();
+                      final filtered = allCategories
+                          .where((c) => c.type == _activeType)
+                          .toList();
                       return _buildCategoryList(filtered, activeColor);
                     },
                   ),
@@ -83,11 +94,22 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Configure', style: GoogleFonts.inter(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500)),
+          Text(
+            'Configure',
+            style: GoogleFonts.inter(
+              color: Colors.white38,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             'Categories',
-            style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+            style: GoogleFonts.spaceGrotesk(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -121,15 +143,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           duration: const Duration(milliseconds: 250),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected ? color : Colors.transparent, 
+            color: isSelected ? color : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            label, 
-            textAlign: TextAlign.center, 
+            label,
+            textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: isSelected ? Colors.black : Colors.white24, 
-              fontWeight: FontWeight.bold, 
+              color: isSelected ? Colors.black : Colors.white24,
+              fontWeight: FontWeight.bold,
               fontSize: 12,
               letterSpacing: 1.1,
             ),
@@ -168,20 +190,29 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             ),
             child: const Icon(Icons.delete_outline, color: Colors.redAccent),
           ),
-          onDismissed: (_) => ref.read(firestoreServiceProvider).deleteCategory(cat.id),
+          onDismissed: (_) =>
+              ref.read(firestoreServiceProvider).deleteCategory(cat.id),
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [activeColor.withOpacity(0.12), const Color(0xFF121212)],
+                colors: [
+                  activeColor.withOpacity(0.12),
+                  const Color(0xFF121212),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(28), // Consistent with Dashboard/Accounts
+              borderRadius: BorderRadius.circular(
+                28,
+              ), // Consistent with Dashboard/Accounts
               border: Border.all(color: activeColor.withOpacity(0.08)),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
               leading: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -196,9 +227,16 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               ),
               title: Text(
                 cat.name,
-                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
               ),
-              trailing: Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.1)),
+              trailing: Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.white.withOpacity(0.1),
+              ),
             ),
           ),
         );
@@ -219,9 +257,18 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     final nameCtrl = TextEditingController();
     int selectedIcon = Icons.category.codePoint;
     final List<IconData> icons = [
-      Icons.fastfood, Icons.directions_car, Icons.shopping_bag, Icons.home,
-      Icons.medical_services, Icons.sports_esports, Icons.school, Icons.pets,
-      Icons.work, Icons.monetization_on, Icons.flight, Icons.build,
+      Icons.fastfood,
+      Icons.directions_car,
+      Icons.shopping_bag,
+      Icons.home,
+      Icons.medical_services,
+      Icons.sports_esports,
+      Icons.school,
+      Icons.pets,
+      Icons.work,
+      Icons.monetization_on,
+      Icons.flight,
+      Icons.build,
     ];
 
     showDialog(
@@ -232,8 +279,16 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           builder: (context, setState) {
             return AlertDialog(
               backgroundColor: const Color(0xFF121212),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-              title: Text('New Category', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              title: Text(
+                'New Category',
+                style: GoogleFonts.spaceGrotesk(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -242,15 +297,29 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     style: GoogleFonts.inter(color: Colors.white),
                     decoration: InputDecoration(
                       labelText: 'Category Name',
-                      labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
-                      enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
-                      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
+                      labelStyle: GoogleFonts.inter(
+                        color: Colors.white24,
+                        fontSize: 12,
+                      ),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white10),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFFBB86FC)),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text("Select Icon", style: GoogleFonts.inter(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      "Select Icon",
+                      style: GoogleFonts.inter(
+                        color: Colors.white38,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Wrap(
@@ -259,15 +328,22 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     children: icons.map((icon) {
                       final isSelected = selectedIcon == icon.codePoint;
                       return GestureDetector(
-                        onTap: () => setState(() => selectedIcon = icon.codePoint),
+                        onTap: () =>
+                            setState(() => selectedIcon = icon.codePoint),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFFBB86FC) : Colors.white.withOpacity(0.03),
+                            color: isSelected
+                                ? const Color(0xFFBB86FC)
+                                : Colors.white.withOpacity(0.03),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(icon, color: isSelected ? Colors.black : Colors.white70, size: 20),
+                          child: Icon(
+                            icon,
+                            color: isSelected ? Colors.black : Colors.white70,
+                            size: 20,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -276,7 +352,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               ),
               actions: [
                 TextButton(
-                  child: Text('Discard', style: GoogleFonts.inter(color: Colors.white38)),
+                  child: Text(
+                    'Discard',
+                    style: GoogleFonts.inter(color: Colors.white38),
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 ElevatedButton(
@@ -286,16 +365,26 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                   ),
                   onPressed: () {
                     if (nameCtrl.text.isNotEmpty) {
-                      ref.read(firestoreServiceProvider).addCategory(
-                        name: nameCtrl.text,
-                        type: _activeType,
-                        iconCode: selectedIcon,
-                        colorCode: _activeType == 'income' ? 0xFF03DAC6 : 0xFFCF6679,
-                      );
+                      ref
+                          .read(firestoreServiceProvider)
+                          .addCategory(
+                            name: nameCtrl.text,
+                            type: _activeType,
+                            iconCode: selectedIcon,
+                            colorCode: _activeType == 'income'
+                                ? 0xFF03DAC6
+                                : 0xFFCF6679,
+                          );
                       Navigator.pop(context);
                     }
                   },
-                  child: Text('Create', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    'Create',
+                    style: GoogleFonts.inter(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             );
