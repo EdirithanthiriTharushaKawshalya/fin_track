@@ -23,21 +23,24 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      // Matching the dashboard background color for seamless blending
-      backgroundColor: const Color(0xFF080808), 
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, 
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
-        // Adding a slight top border to define the edge against the dashboard
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
+          boxShadow: isDark ? [] : [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))
+          ],
           border: Border(
             top: BorderSide(
-              color: Colors.white.withOpacity(0.05),
+              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
               width: 1,
             ),
           ),
@@ -51,39 +54,38 @@ class _HomeShellState extends State<HomeShell> {
             data: NavigationBarThemeData(
               indicatorColor: const Color(0xFFBB86FC).withOpacity(0.2),
               labelTextStyle: WidgetStateProperty.all(
-                const TextStyle(
+                TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white70,
+                  color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
             ),
             child: NavigationBar(
-              backgroundColor: const Color(0xFF1E1E1E),
+              backgroundColor: Colors.transparent,
               height: 70,
               elevation: 0,
               selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) =>
-                  setState(() => _selectedIndex = index),
-              destinations: const [
+              onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+              destinations: [
                 NavigationDestination(
-                  icon: Icon(Icons.dashboard_outlined, color: Colors.white54),
-                  selectedIcon: Icon(Icons.dashboard, color: Color(0xFFBB86FC)),
+                  icon: Icon(Icons.dashboard_outlined, color: isDark ? Colors.white54 : Colors.black45),
+                  selectedIcon: const Icon(Icons.dashboard, color: Color(0xFFBB86FC)),
                   label: 'Home',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.account_balance_wallet_outlined, color: Colors.white54),
-                  selectedIcon: Icon(Icons.account_balance_wallet, color: Color(0xFFBB86FC)),
+                  icon: Icon(Icons.account_balance_wallet_outlined, color: isDark ? Colors.white54 : Colors.black45),
+                  selectedIcon: const Icon(Icons.account_balance_wallet, color: Color(0xFFBB86FC)),
                   label: 'Assets',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.pie_chart_outline, color: Colors.white54),
-                  selectedIcon: Icon(Icons.pie_chart, color: Color(0xFFBB86FC)),
+                  icon: Icon(Icons.pie_chart_outline, color: isDark ? Colors.white54 : Colors.black45),
+                  selectedIcon: const Icon(Icons.pie_chart, color: Color(0xFFBB86FC)),
                   label: 'Analytics',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.map_outlined, color: Colors.white54),
-                  selectedIcon: Icon(Icons.map, color: Color(0xFFBB86FC)),
+                  icon: Icon(Icons.map_outlined, color: isDark ? Colors.white54 : Colors.black45),
+                  selectedIcon: const Icon(Icons.map, color: Color(0xFFBB86FC)),
                   label: 'Plan',
                 ),
               ],

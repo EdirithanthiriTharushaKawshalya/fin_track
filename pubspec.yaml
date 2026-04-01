@@ -10,7 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  shared_preferences: ^2.3.2 # NEW: For persistent storage
+  
   cupertino_icons: ^1.0.8
 
   # Backend & Auth

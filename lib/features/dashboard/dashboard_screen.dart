@@ -9,7 +9,7 @@ import '../transactions/add_transaction_sheet.dart';
 import 'transaction_provider.dart';
 import 'widgets/balance_card.dart';
 import '../../main.dart'; // To access themeProvider
-import '../profile/profile_screen.dart'; // New Profile Screen import
+import '../profile/profile_screen.dart'; // To access ProfileScreen
 
 final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
@@ -49,7 +49,7 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const BalanceCard(), 
                   const SizedBox(height: 32),
-                  _buildSubHeader("Recent Transactions"),
+                  _buildSubHeader(context, "Recent Transactions"),
                   const SizedBox(height: 16),
                   Expanded(
                     child: monthlyTransactions.isEmpty
@@ -99,9 +99,8 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             _buildNavigationControls(ref, selectedDate, isDark),
             const SizedBox(width: 12),
-            // SETTINGS ICON
             IconButton(
-              onPressed: () => _showSettingsSheet(context, ref),
+              onPressed: () => _showSettingsSheet(context),
               icon: const Icon(Icons.settings_outlined, color: Color(0xFFBB86FC), size: 22),
               style: IconButton.styleFrom(
                 backgroundColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05),
@@ -138,64 +137,68 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showSettingsSheet(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
-    final isDark = themeMode == ThemeMode.dark;
-
+  void _showSettingsSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF121212).withOpacity(0.9) : Colors.white.withOpacity(0.9),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10))),
-              const SizedBox(height: 24),
-              Text('Settings', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 32),
-              
-              // PROFILE ITEM - Now navigates to ProfileScreen
-              _buildSettingsTile(
-                icon: Icons.person_outline,
-                title: 'User Profile',
-                subtitle: 'Manage your personal identity',
-                isDark: isDark,
-                onTap: () {
-                  Navigator.pop(context); // Close the sheet
-                  Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (context) => const ProfileScreen())
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final themeMode = ref.watch(themeProvider);
+          final isDark = themeMode == ThemeMode.dark;
 
-              // THEME TOGGLE
-              _buildSettingsTile(
-                icon: isDark ? Icons.dark_mode : Icons.light_mode,
-                title: 'Appearance',
-                subtitle: isDark ? 'Dark Theme Enabled' : 'Light Theme Enabled',
-                isDark: isDark,
-                trailing: Switch(
-                  value: isDark,
-                  activeColor: const Color(0xFFBB86FC),
-                  onChanged: (val) {
-                    ref.read(themeProvider.notifier).state = val ? ThemeMode.dark : ThemeMode.light;
-                  },
-                ),
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF121212).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
               ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10))),
+                  const SizedBox(height: 24),
+                  Text('Settings', 
+                    style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 32),
+                  
+                  _buildSettingsTile(
+                    icon: Icons.person_outline,
+                    title: 'User Profile',
+                    subtitle: 'Manage your personal identity',
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.pop(context); 
+                      Navigator.push(
+                        context, 
+                        MaterialPageRoute(builder: (context) => const ProfileScreen())
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+
+                  _buildSettingsTile(
+                    icon: isDark ? Icons.dark_mode : Icons.light_mode,
+                    title: 'Appearance',
+                    subtitle: isDark ? 'Dark Theme Enabled' : 'Light Theme Enabled',
+                    isDark: isDark,
+                    trailing: Switch(
+                      value: isDark,
+                      activeColor: const Color(0xFFBB86FC),
+                      onChanged: (val) {
+                        ref.read(themeProvider.notifier).setTheme(val ? ThemeMode.dark : ThemeMode.light);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -224,14 +227,12 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSubHeader(String text) {
-    return Builder(builder: (context) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      return Text(
-        text,
-        style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontWeight: FontWeight.w600, fontSize: 12, letterSpacing: 0.5),
-      );
-    });
+  Widget _buildSubHeader(BuildContext context, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      text,
+      style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontWeight: FontWeight.w600, fontSize: 12, letterSpacing: 0.5),
+    );
   }
 
   Widget _buildDateGroup(BuildContext context, WidgetRef ref, String date, List<dynamic> items) {

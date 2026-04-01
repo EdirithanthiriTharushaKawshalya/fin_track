@@ -17,9 +17,10 @@ class AccountsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsStreamProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080808),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -29,14 +30,14 @@ class AccountsScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               _buildHeader(context, ref),
               const SizedBox(height: 32),
-              _buildSubHeader("Your Assets"),
+              _buildSubHeader(context, "Your Assets"),
               const SizedBox(height: 16),
               Expanded(
                 child: accountsAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
                   error: (err, _) => Center(child: Text('Error loading accounts', style: GoogleFonts.inter(color: Colors.redAccent))),
                   data: (accounts) {
-                    if (accounts.isEmpty) return _buildEmptyState();
+                    if (accounts.isEmpty) return _buildEmptyState(context);
                     return ListView.separated(
                       padding: const EdgeInsets.only(bottom: 100),
                       itemCount: accounts.length,
@@ -56,23 +57,23 @@ class AccountsScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Manage', style: GoogleFonts.inter(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500)),
+            Text('Manage', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12, fontWeight: FontWeight.w500)),
             const SizedBox(height: 4),
-            Text('My Accounts', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
+            Text('My Accounts', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.w700)),
           ],
         ),
         IconButton(
           onPressed: () => _showTransferDialog(context, ref),
           icon: const Icon(Icons.swap_horiz, color: Color(0xFFBB86FC), size: 28),
-          // Increased border radius for a rounder look
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white.withOpacity(0.03), 
+            backgroundColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05), 
             padding: const EdgeInsets.all(12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           ),
@@ -81,11 +82,13 @@ class AccountsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSubHeader(String text) {
-    return Text(text, style: GoogleFonts.inter(color: Colors.white24, fontWeight: FontWeight.w600, fontSize: 12));
+  Widget _buildSubHeader(BuildContext context, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(text, style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black26, fontWeight: FontWeight.w600, fontSize: 12));
   }
 
   Widget _buildAssetCard(BuildContext context, WidgetRef ref, AccountModel acc) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bool isBank = acc.type == 'bank';
     final Color accentColor = Color(acc.colorCode);
     
@@ -96,16 +99,18 @@ class AccountsScreen extends ConsumerWidget {
       onDismissed: (_) => ref.read(firestoreServiceProvider).deleteAccount(acc.id),
       background: _buildDeleteBackground(),
       child: Container(
-        // Set a fixed height so all cards are the same size
         height: 120, 
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [accentColor.withOpacity(0.15), accentColor.withOpacity(0.03)],
+            colors: [
+              accentColor.withOpacity(isDark ? 0.15 : 0.1), 
+              isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.02)
+            ],
             begin: Alignment.topLeft, end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(28), // Matches the modern rounded aesthetic
-          border: Border.all(color: accentColor.withOpacity(0.1)),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: accentColor.withOpacity(isDark ? 0.1 : 0.3)),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
@@ -116,7 +121,7 @@ class AccountsScreen extends ConsumerWidget {
                 bottom: -15, 
                 child: Icon(
                   isBank ? Icons.account_balance : Icons.account_balance_wallet, 
-                  color: accentColor.withOpacity(0.05), 
+                  color: accentColor.withOpacity(isDark ? 0.05 : 0.08), 
                   size: 110,
                 ),
               ),
@@ -124,13 +129,13 @@ class AccountsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center, // Centering content within the fixed height
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(acc.name, style: GoogleFonts.inter(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(acc.name, style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black54, fontWeight: FontWeight.w600, fontSize: 14)),
                     const SizedBox(height: 4),
                     Text(
                       CurrencyFormatter.format(acc.currentBalance), 
-                      style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -154,14 +159,14 @@ class AccountsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(child: Text("No accounts found", style: GoogleFonts.inter(color: Colors.white10, fontSize: 14)));
+  Widget _buildEmptyState(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(child: Text("No accounts found", style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12, fontSize: 14)));
   }
 
   Widget _buildFAB(BuildContext context, WidgetRef ref) {
     return FloatingActionButton(
       backgroundColor: const Color(0xFFBB86FC),
-      // Fully rounded FAB
       shape: const StadiumBorder(), 
       onPressed: () => _showAddAccountDialog(context, ref),
       child: const Icon(Icons.add, color: Colors.black, size: 28),
@@ -169,17 +174,18 @@ class AccountsScreen extends ConsumerWidget {
   }
 
   Future<bool?> _confirmDeletion(BuildContext context) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return await showDialog(
       context: context,
       builder: (ctx) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text("Delete Account?", style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
-          content: Text("Are you sure you want to remove this account?", style: GoogleFonts.inter(color: Colors.white60, fontSize: 14)),
+          title: Text("Delete Account?", style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          content: Text("Are you sure you want to remove this account?", style: GoogleFonts.inter(color: isDark ? Colors.white60 : Colors.black54, fontSize: 14)),
           actions: [
-            TextButton(child: Text("Cancel", style: GoogleFonts.inter(color: Colors.white38)), onPressed: () => Navigator.of(ctx).pop(false)),
+            TextButton(child: Text("Cancel", style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38)), onPressed: () => Navigator.of(ctx).pop(false)),
             TextButton(child: Text("Delete", style: GoogleFonts.inter(color: Colors.redAccent, fontWeight: FontWeight.bold)), onPressed: () => Navigator.of(ctx).pop(true)),
           ],
         ),
@@ -190,6 +196,7 @@ class AccountsScreen extends ConsumerWidget {
   void _showAddAccountDialog(BuildContext context, WidgetRef ref) {
     final nameCtrl = TextEditingController();
     final balanceCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     String type = 'bank';
 
     showDialog(
@@ -197,25 +204,25 @@ class AccountsScreen extends ConsumerWidget {
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text('New Account', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text('New Account', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTextField(nameCtrl, 'Account Name'),
+              _buildTextField(context, nameCtrl, 'Account Name'),
               const SizedBox(height: 16),
-              _buildTextField(balanceCtrl, 'Initial Balance', isNumber: true, prefix: 'Rs '),
+              _buildTextField(context, balanceCtrl, 'Initial Balance', isNumber: true, prefix: 'Rs '),
               const SizedBox(height: 16),
-              _buildDropdown((val) => type = val!, type),
+              _buildDropdown(context, (val) => type = val!, type),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Discard', style: GoogleFonts.inter(color: Colors.white38))),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('Discard', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFBB86FC), 
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), // Pill-shaped button
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               onPressed: () {
                 if (nameCtrl.text.isNotEmpty && balanceCtrl.text.isNotEmpty) {
@@ -236,27 +243,33 @@ class AccountsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String hint, {bool isNumber = false, String? prefix}) {
+  Widget _buildTextField(BuildContext context, TextEditingController ctrl, String hint, {bool isNumber = false, String? prefix}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: ctrl,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: GoogleFonts.inter(color: Colors.white),
+      style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         labelText: hint,
-        labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
+        labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
         prefixText: prefix,
-        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white12)),
+        prefixStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
         focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
       ),
     );
   }
 
-  Widget _buildDropdown(Function(String?) onChanged, String value) {
+  Widget _buildDropdown(BuildContext context, Function(String?) onChanged, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DropdownButtonFormField<String>(
       value: value,
-      dropdownColor: const Color(0xFF121212),
-      style: GoogleFonts.inter(color: Colors.white),
-      decoration: InputDecoration(labelText: 'Account Type', labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12)),
+      dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
+      style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+      decoration: InputDecoration(
+        labelText: 'Account Type', 
+        labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12)
+      ),
       items: const [
         DropdownMenuItem(value: 'bank', child: Text('Bank Account')),
         DropdownMenuItem(value: 'wallet', child: Text('Cash Wallet')),
@@ -268,6 +281,7 @@ class AccountsScreen extends ConsumerWidget {
   void _showTransferDialog(BuildContext context, WidgetRef ref) {
     final amountCtrl = TextEditingController();
     final accounts = ref.read(accountsStreamProvider).value ?? [];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (accounts.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Add at least two accounts to transfer.")));
@@ -283,21 +297,21 @@ class AccountsScreen extends ConsumerWidget {
         builder: (context, setState) => BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: AlertDialog(
-            backgroundColor: const Color(0xFF121212),
+            backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            title: Text('Transfer Funds', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+            title: Text('Transfer Funds', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildSimpleDropdown('From', fromAccId, accounts, (val) => setState(() => fromAccId = val!)),
-                const Padding(padding: EdgeInsets.symmetric(vertical: 8.0), child: Icon(Icons.arrow_downward, color: Colors.white12)),
-                _buildSimpleDropdown('To', toAccId, accounts, (val) => setState(() => toAccId = val!)),
+                _buildSimpleDropdown(context, 'From', fromAccId, accounts, (val) => setState(() => fromAccId = val!)),
+                Padding(padding: const EdgeInsets.symmetric(vertical: 8.0), child: Icon(Icons.arrow_downward, color: isDark ? Colors.white12 : Colors.black12)),
+                _buildSimpleDropdown(context, 'To', toAccId, accounts, (val) => setState(() => toAccId = val!)),
                 const SizedBox(height: 16),
-                _buildTextField(amountCtrl, 'Amount', isNumber: true, prefix: 'Rs '),
+                _buildTextField(context, amountCtrl, 'Amount', isNumber: true, prefix: 'Rs '),
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white38))),
+              TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFBB86FC), 
@@ -321,12 +335,19 @@ class AccountsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSimpleDropdown(String label, String value, List<AccountModel> accounts, Function(String?) onChanged) {
+  Widget _buildSimpleDropdown(BuildContext context, String label, String value, List<AccountModel> accounts, Function(String?) onChanged) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return DropdownButtonFormField<String>(
       value: value,
-      dropdownColor: const Color(0xFF121212),
-      decoration: InputDecoration(labelText: label, labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12)),
-      items: accounts.map((acc) => DropdownMenuItem(value: acc.id, child: Text(acc.name, style: GoogleFonts.inter(fontSize: 14, color: Colors.white)))).toList(),
+      dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
+      decoration: InputDecoration(
+        labelText: label, 
+        labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12)
+      ),
+      items: accounts.map((acc) => DropdownMenuItem(
+        value: acc.id, 
+        child: Text(acc.name, style: GoogleFonts.inter(fontSize: 14, color: isDark ? Colors.white : Colors.black))
+      )).toList(),
       onChanged: onChanged,
     );
   }

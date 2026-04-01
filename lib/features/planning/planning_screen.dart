@@ -11,8 +11,10 @@ class PlanningScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF080808),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -25,21 +27,21 @@ class PlanningScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Strategy', style: GoogleFonts.inter(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.w500)),
+                    Text('Strategy', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
-                    Text('Wealth Planning', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                    Text('Wealth Planning', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               const SizedBox(height: 32),
-              _buildSectionHeader('MY GOALS'),
+              _buildSectionHeader(context, 'MY GOALS'),
               const SizedBox(height: 350, child: GoalsScreen()),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24),
-                child: Divider(color: Colors.white10, thickness: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Divider(color: isDark ? Colors.white10 : Colors.black12, thickness: 1),
               ),
               const SizedBox(height: 24),
-              _buildSectionHeader('OWES & OWED'),
+              _buildSectionHeader(context, 'OWES & OWED'),
               const SizedBox(height: 500, child: DebtsScreen()),
             ],
           ),
@@ -55,6 +57,7 @@ class PlanningScreen extends ConsumerWidget {
   }
 
   void _showActionSelector(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -63,40 +66,28 @@ class PlanningScreen extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: const Color(0xFF121212).withOpacity(0.9),
+            color: (isDark ? const Color(0xFF121212) : Colors.white).withOpacity(0.9),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10))),
               const SizedBox(height: 24),
-              Text('What are we tracking today?', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('What are we tracking today?', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 32),
               Row(
                 children: [
-                  _buildOptionCard(
-                    context, 
-                    'Saving Goal', 
-                    Icons.stars_rounded, 
-                    const Color(0xFF03DAC6),
-                    () {
-                      Navigator.pop(context);
-                      _showAddGoalDialog(context, ref);
-                    }
-                  ),
+                  _buildOptionCard(context, 'Saving Goal', Icons.stars_rounded, const Color(0xFF03DAC6), () {
+                    Navigator.pop(context);
+                    _showAddGoalDialog(context, ref);
+                  }),
                   const SizedBox(width: 16),
-                  _buildOptionCard(
-                    context, 
-                    'IOU Record', 
-                    Icons.account_balance_wallet_rounded, 
-                    const Color(0xFFBB86FC),
-                    () {
-                      Navigator.pop(context);
-                      _showDebtTypeSelector(context, ref);
-                    }
-                  ),
+                  _buildOptionCard(context, 'IOU Record', Icons.account_balance_wallet_rounded, const Color(0xFFBB86FC), () {
+                    Navigator.pop(context);
+                    _showDebtTypeSelector(context, ref);
+                  }),
                 ],
               ),
               const SizedBox(height: 20),
@@ -108,21 +99,22 @@ class PlanningScreen extends ConsumerWidget {
   }
 
   Widget _buildOptionCard(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 24),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.05),
+            color: color.withOpacity(isDark ? 0.05 : 0.1),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: color.withOpacity(0.1)),
+            border: Border.all(color: color.withOpacity(0.2)),
           ),
           child: Column(
             children: [
               Icon(icon, color: color, size: 32),
               const SizedBox(height: 12),
-              Text(title, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text(title, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -133,25 +125,26 @@ class PlanningScreen extends ConsumerWidget {
   void _showAddGoalDialog(BuildContext context, WidgetRef ref) {
     final titleCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text('Set a New Goal', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text('Set a New Goal', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDialogField(titleCtrl, 'What are you saving for?'),
+              _buildDialogField(context, titleCtrl, 'What are you saving for?'),
               const SizedBox(height: 16),
-              _buildDialogField(amountCtrl, 'How much do you need?', isNumber: true, prefix: 'Rs '),
+              _buildDialogField(context, amountCtrl, 'How much do you need?', isNumber: true, prefix: 'Rs '),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white38))),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF03DAC6), shape: const StadiumBorder()),
               onPressed: () {
@@ -173,14 +166,15 @@ class PlanningScreen extends ConsumerWidget {
   }
 
   void _showDebtTypeSelector(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text('Choose Record Type', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text('Choose Record Type', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -204,25 +198,26 @@ class PlanningScreen extends ConsumerWidget {
   void _showAddDebtDialog(BuildContext context, WidgetRef ref, String type) {
     final nameCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text(type == 'borrowed' ? 'Add Borrowed Amount' : 'Add Lent Amount', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text(type == 'borrowed' ? 'Add Borrowed Amount' : 'Add Lent Amount', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildDialogField(nameCtrl, 'Person\'s Name'),
+              _buildDialogField(context, nameCtrl, 'Person\'s Name'),
               const SizedBox(height: 16),
-              _buildDialogField(amountCtrl, 'Total Amount', isNumber: true, prefix: 'Rs '),
+              _buildDialogField(context, amountCtrl, 'Total Amount', isNumber: true, prefix: 'Rs '),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white38))),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFBB86FC), shape: const StadiumBorder()),
               onPressed: () {
@@ -244,28 +239,30 @@ class PlanningScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDialogField(TextEditingController ctrl, String hint, {bool isNumber = false, String? prefix}) {
+  Widget _buildDialogField(BuildContext context, TextEditingController ctrl, String hint, {bool isNumber = false, String? prefix}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: ctrl,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: GoogleFonts.inter(color: Colors.white),
+      style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         labelText: hint,
-        labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
+        labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
         prefixText: prefix,
-        prefixStyle: const TextStyle(color: Colors.white70),
-        enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white12)),
+        prefixStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
         focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Text(
         title,
-        style: GoogleFonts.inter(color: Colors.white24, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 11),
+        style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black26, fontWeight: FontWeight.bold, letterSpacing: 1.2, fontSize: 11),
       ),
     );
   }

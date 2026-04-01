@@ -2,12 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'features/auth/auth_gate.dart';
+import 'core/services/theme_service.dart';
 
-// Theme Provider to manage Dark/Light state
-final themeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
+// REFACTORED: Theme Notifier that persists changes
+final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
+  return ThemeNotifier();
+});
+
+class ThemeNotifier extends StateNotifier<ThemeMode> {
+  final _service = ThemeService();
+
+  ThemeNotifier() : super(ThemeMode.dark) {
+    _loadTheme(); // Load saved theme on startup
+  }
+
+  Future<void> _loadTheme() async {
+    state = await _service.getThemeMode();
+  }
+
+  Future<void> setTheme(ThemeMode mode) async {
+    state = mode;
+    await _service.saveThemeMode(mode);
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,27 +46,21 @@ class FinTrackApp extends ConsumerWidget {
       title: 'FinTrack',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
-      // LIGHT THEME CONFIG
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFF5F5F7),
         colorScheme: const ColorScheme.light(
           primary: Color(0xFFBB86FC),
           secondary: Color(0xFF03DAC6),
-          surface: Colors.white,
         ),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
       ),
-      // DARK THEME CONFIG (Your original aesthetic)
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF080808),
+        scaffoldBackgroundColor: const Color(0xFF121212),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFFBB86FC),
           secondary: Color(0xFF03DAC6),
-          surface: Color(0xFF121212),
         ),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       ),
       home: const AuthGate(),
     );

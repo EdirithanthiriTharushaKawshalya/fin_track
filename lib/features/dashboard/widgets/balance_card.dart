@@ -10,6 +10,7 @@ class BalanceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final portfolio = ref.watch(portfolioProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final balance = portfolio['balance'] as double;
     final income = portfolio['income'] as double;
@@ -21,14 +22,21 @@ class BalanceCard extends ConsumerWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryAccent.withOpacity(0.12), const Color(0xFF121212)],
+          colors: [
+            primaryAccent.withOpacity(0.12), 
+            isDark ? const Color(0xFF121212) : Colors.white
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: primaryAccent.withOpacity(0.08)),
+        border: Border.all(color: primaryAccent.withOpacity(isDark ? 0.08 : 0.2)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), 
+            blurRadius: 20, 
+            offset: const Offset(0, 10)
+          ),
         ],
       ),
       child: ClipRRect(
@@ -38,7 +46,11 @@ class BalanceCard extends ConsumerWidget {
             Positioned(
               right: -20,
               top: -20,
-              child: Icon(Icons.account_balance_wallet, color: primaryAccent.withOpacity(0.02), size: 180),
+              child: Icon(
+                Icons.account_balance_wallet, 
+                color: isDark ? primaryAccent.withOpacity(0.02) : primaryAccent.withOpacity(0.05), 
+                size: 180
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(24),
@@ -47,28 +59,36 @@ class BalanceCard extends ConsumerWidget {
                 children: [
                   Text(
                     'Total Balance',
-                    style: GoogleFonts.inter(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.inter(
+                      color: isDark ? Colors.white54 : Colors.black45, 
+                      fontSize: 13, 
+                      fontWeight: FontWeight.w500
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     CurrencyFormatter.format(balance),
-                    style: GoogleFonts.spaceGrotesk(color: Colors.white, fontSize: 38, fontWeight: FontWeight.w700),
+                    style: GoogleFonts.spaceGrotesk(
+                      color: isDark ? Colors.white : Colors.black, 
+                      fontSize: 38, 
+                      fontWeight: FontWeight.w700
+                    ),
                   ),
                   const SizedBox(height: 28),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.15),
+                      color: isDark ? Colors.black.withOpacity(0.15) : Colors.black.withOpacity(0.03),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildStatColumn('Income', income, const Color(0xFF03DAC6), Icons.arrow_downward),
+                          child: _buildStatColumn(context, 'Income', income, const Color(0xFF03DAC6), Icons.arrow_downward),
                         ),
-                        Container(height: 30, width: 1, color: Colors.white10),
+                        Container(height: 30, width: 1, color: isDark ? Colors.white10 : Colors.black12),
                         Expanded(
-                          child: _buildStatColumn('Expenses', expense, const Color(0xFFFF0266), Icons.arrow_upward, crossAxis: CrossAxisAlignment.end),
+                          child: _buildStatColumn(context, 'Expenses', expense, const Color(0xFFFF0266), Icons.arrow_upward, crossAxis: CrossAxisAlignment.end),
                         ),
                       ],
                     ),
@@ -82,7 +102,8 @@ class BalanceCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatColumn(String label, double value, Color color, IconData icon, {CrossAxisAlignment crossAxis = CrossAxisAlignment.start}) {
+  Widget _buildStatColumn(BuildContext context, String label, double value, Color color, IconData icon, {CrossAxisAlignment crossAxis = CrossAxisAlignment.start}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: crossAxis,
       children: [
@@ -91,7 +112,14 @@ class BalanceCard extends ConsumerWidget {
           children: [
             if (crossAxis == CrossAxisAlignment.start) Icon(icon, color: color, size: 12),
             const SizedBox(width: 4),
-            Text(label, style: GoogleFonts.inter(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w500)),
+            Text(
+              label, 
+              style: GoogleFonts.inter(
+                color: isDark ? Colors.white38 : Colors.black38, 
+                fontSize: 11, 
+                fontWeight: FontWeight.w500
+              )
+            ),
             if (crossAxis == CrossAxisAlignment.end) ...[const SizedBox(width: 4), Icon(icon, color: color, size: 12)],
           ],
         ),

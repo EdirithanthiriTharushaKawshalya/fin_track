@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
+import 'package:fin_track/core/services/export_service.dart'; // Ensure this service file exists
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,7 +28,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     try {
+      // 1. Re-authenticate to prove identity for sensitive change
       await user.reauthenticateWithCredential(cred);
+      
+      // 2. Update to the new password
       await user.updatePassword(newPassword);
       
       if (mounted) {
@@ -52,8 +56,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  // Logic to handle CSV Export
-  void _handleExport() {
+  // Functional logic to handle CSV Export
+  void _handleExport() async {
     final transactions = ref.read(transactionStreamProvider).value ?? [];
     
     if (transactions.isEmpty) {
@@ -63,11 +67,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
 
-    // Professional Note: Once you add 'csv' and 'share_plus' to pubspec.yaml, 
-    // you can call the ExportService here. For now, we show a status update.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Preparing CSV document...")),
-    );
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Generating CSV document...")),
+      );
+      
+      // Call the functional export logic from your ExportService
+      await ExportService.exportTransactionsToCsv(transactions);
+      
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Export failed: $e"), 
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -97,9 +115,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
+            // 1. Profile Header Card
             _buildProfileCard(context, user, isDark),
             const SizedBox(height: 32),
             
+            // 2. Security Section
             _buildSectionLabel('SECURITY PROTOCOLS', isDark),
             const SizedBox(height: 16),
             _buildActionTile(
@@ -112,6 +132,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             
             const SizedBox(height: 32),
             
+            // 3. System Section
             _buildSectionLabel('SYSTEM ACTIONS', isDark),
             const SizedBox(height: 16),
             _buildActionTile(
@@ -215,6 +236,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         color: isDark ? const Color(0xFF121212) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05)),
+        boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: ListTile(
         onTap: onTap,

@@ -17,18 +17,17 @@ class GoalsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final goalsAsync = ref.watch(goalsStreamProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080808),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: goalsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
           error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.redAccent))),
           data: (goals) {
             if (goals.isEmpty) {
-              return Center(
-                child: Text("No active targets.", style: GoogleFonts.inter(color: Colors.white10)),
-              );
+              return Center(child: Text("No active targets.", style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12)));
             }
             return ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -46,10 +45,7 @@ class GoalsScreen extends ConsumerWidget {
                     alignment: Alignment.centerRight,
                     padding: const EdgeInsets.only(right: 24),
                     margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(28),
-                    ),
+                    decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(28)),
                     child: const Icon(Icons.delete_outline, color: Colors.redAccent),
                   ),
                   onDismissed: (_) => ref.read(firestoreServiceProvider).deleteGoal(goal.id),
@@ -58,11 +54,11 @@ class GoalsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [const Color(0xFF03DAC6).withOpacity(0.15), const Color(0xFF03DAC6).withOpacity(0.03)],
+                        colors: [const Color(0xFF03DAC6).withOpacity(0.15), (isDark ? Colors.white : Colors.black).withOpacity(0.03)],
                         begin: Alignment.topLeft, end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: const Color(0xFF03DAC6).withOpacity(0.1)),
+                      border: Border.all(color: const Color(0xFF03DAC6).withOpacity(isDark ? 0.1 : 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,19 +66,19 @@ class GoalsScreen extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(goal.title, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                            Text(goal.title, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
                             Text('$percent%', style: GoogleFonts.spaceGrotesk(color: const Color(0xFF03DAC6), fontWeight: FontWeight.bold)),
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text('Target: ${DateFormat('MMM d, y').format(goal.deadline)}', style: GoogleFonts.inter(color: Colors.white38, fontSize: 12)),
+                        Text('Target: ${DateFormat('MMM d, y').format(goal.deadline)}', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12)),
                         const SizedBox(height: 20),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(100),
                           child: LinearProgressIndicator(
                             value: progress,
                             minHeight: 8,
-                            backgroundColor: Colors.white.withOpacity(0.05),
+                            backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
                             color: const Color(0xFF03DAC6),
                           ),
                         ),
@@ -92,7 +88,7 @@ class GoalsScreen extends ConsumerWidget {
                           children: [
                             Text(
                               '${CurrencyFormatter.format(goal.savedAmount)} / ${CurrencyFormatter.format(goal.targetAmount)}',
-                              style: GoogleFonts.spaceGrotesk(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
+                              style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
                             ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
@@ -120,28 +116,30 @@ class GoalsScreen extends ConsumerWidget {
 
   void _showDepositDialog(BuildContext context, WidgetRef ref, GoalModel goal) {
     final amountCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: AlertDialog(
-          backgroundColor: const Color(0xFF121212),
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          title: Text('Add Funds', style: GoogleFonts.spaceGrotesk(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Text('Add Funds', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
           content: TextField(
             controller: amountCtrl,
             keyboardType: TextInputType.number,
-            style: GoogleFonts.inter(color: Colors.white),
+            style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
             decoration: InputDecoration(
               labelText: 'Amount',
-              labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
+              labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
               prefixText: 'Rs ',
-              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white12)),
+              prefixStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
               focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF03DAC6))),
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white38))),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF03DAC6), shape: const StadiumBorder()),
               onPressed: () {

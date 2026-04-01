@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../../core/models/category_model.dart';
 
-// Provider to fetch categories
 final categoryStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
   return ref.watch(firestoreServiceProvider).getCategories();
 });
@@ -18,21 +17,22 @@ class CategoriesScreen extends ConsumerStatefulWidget {
 }
 
 class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
-  // Syncing with the modern toggle logic used in Analytics/Transaction sheets
   String _activeType = 'expense';
 
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoryStreamProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     final Color activeColor = _activeType == 'income'
         ? const Color(0xFF03DAC6)
         : const Color(0xFFCF6679);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080808),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Ambient Glow Background for Glass depth
+          // Adaptive Ambient Glow
           Positioned(
             top: -60,
             left: -60,
@@ -41,7 +41,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: activeColor.withOpacity(0.05),
+                color: activeColor.withOpacity(isDark ? 0.05 : 0.08),
               ),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),
@@ -54,28 +54,17 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                _buildHeader(),
+                _buildHeader(context),
                 const SizedBox(height: 24),
-                _buildFloatingToggle(activeColor),
+                _buildFloatingToggle(context, activeColor),
                 const SizedBox(height: 16),
                 Expanded(
                   child: categoriesAsync.when(
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFBB86FC),
-                      ),
-                    ),
-                    error: (err, _) => Center(
-                      child: Text(
-                        'Error: $err',
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
+                    loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
+                    error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
                     data: (allCategories) {
-                      final filtered = allCategories
-                          .where((c) => c.type == _activeType)
-                          .toList();
-                      return _buildCategoryList(filtered, activeColor);
+                      final filtered = allCategories.where((c) => c.type == _activeType).toList();
+                      return _buildCategoryList(context, filtered, activeColor);
                     },
                   ),
                 ),
@@ -88,53 +77,42 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Configure',
-            style: GoogleFonts.inter(
-              color: Colors.white38,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text('Configure', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12, fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),
-          Text(
-            'Categories',
-            style: GoogleFonts.spaceGrotesk(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('Categories', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 
-  Widget _buildFloatingToggle(Color activeColor) {
+  Widget _buildFloatingToggle(BuildContext context, Color activeColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
       ),
       child: Row(
         children: [
-          _togglePart('EXPENSES', 'expense', const Color(0xFFCF6679)),
-          _togglePart('INCOME', 'income', const Color(0xFF03DAC6)),
+          _togglePart(context, 'EXPENSES', 'expense', const Color(0xFFCF6679)),
+          _togglePart(context, 'INCOME', 'income', const Color(0xFF03DAC6)),
         ],
       ),
     );
   }
 
-  Widget _togglePart(String label, String value, Color color) {
+  Widget _togglePart(BuildContext context, String label, String value, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _activeType == value;
     return Expanded(
       child: GestureDetector(
@@ -150,7 +128,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             label,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              color: isSelected ? Colors.black : Colors.white24,
+              color: isSelected ? Colors.black : (isDark ? Colors.white24 : Colors.black26),
               fontWeight: FontWeight.bold,
               fontSize: 12,
               letterSpacing: 1.1,
@@ -161,14 +139,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     );
   }
 
-  Widget _buildCategoryList(List<CategoryModel> categories, Color activeColor) {
+  Widget _buildCategoryList(BuildContext context, List<CategoryModel> categories, Color activeColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     if (categories.isEmpty) {
-      return Center(
-        child: Text(
-          "No ${_activeType} categories yet.",
-          style: GoogleFonts.inter(color: Colors.white10, fontSize: 14),
-        ),
-      );
+      return Center(child: Text("No ${_activeType} categories yet.", style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12, fontSize: 14)));
     }
 
     return ListView.builder(
@@ -184,59 +158,34 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 24),
             margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.redAccent.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(28),
-            ),
+            decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(28)),
             child: const Icon(Icons.delete_outline, color: Colors.redAccent),
           ),
-          onDismissed: (_) =>
-              ref.read(firestoreServiceProvider).deleteCategory(cat.id),
+          onDismissed: (_) => ref.read(firestoreServiceProvider).deleteCategory(cat.id),
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  activeColor.withOpacity(0.12),
-                  const Color(0xFF121212),
+                  activeColor.withOpacity(isDark ? 0.12 : 0.08),
+                  isDark ? const Color(0xFF121212) : Colors.white,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(
-                28,
-              ), // Consistent with Dashboard/Accounts
-              border: Border.all(color: activeColor.withOpacity(0.08)),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: activeColor.withOpacity(isDark ? 0.08 : 0.2)),
+              boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               leading: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Color(cat.colorCode).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  IconData(cat.iconCode, fontFamily: 'MaterialIcons'),
-                  color: Color(cat.colorCode),
-                  size: 22,
-                ),
+                decoration: BoxDecoration(color: Color(cat.colorCode).withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(IconData(cat.iconCode, fontFamily: 'MaterialIcons'), color: Color(cat.colorCode), size: 22),
               ),
-              title: Text(
-                cat.name,
-                style: GoogleFonts.inter(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-              trailing: Icon(
-                Icons.chevron_right_rounded,
-                color: Colors.white.withOpacity(0.1),
-              ),
+              title: Text(cat.name, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
+              trailing: Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
             ),
           ),
         );
@@ -255,21 +204,9 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   void _showAddCategoryDialog(BuildContext context) {
     final nameCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     int selectedIcon = Icons.category.codePoint;
-    final List<IconData> icons = [
-      Icons.fastfood,
-      Icons.directions_car,
-      Icons.shopping_bag,
-      Icons.home,
-      Icons.medical_services,
-      Icons.sports_esports,
-      Icons.school,
-      Icons.pets,
-      Icons.work,
-      Icons.monetization_on,
-      Icons.flight,
-      Icons.build,
-    ];
+    final List<IconData> icons = [Icons.fastfood, Icons.directions_car, Icons.shopping_bag, Icons.home, Icons.medical_services, Icons.sports_esports, Icons.school, Icons.pets, Icons.work, Icons.monetization_on, Icons.flight, Icons.build];
 
     showDialog(
       context: context,
@@ -278,49 +215,24 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         child: StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF121212),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
-              title: Text(
-                'New Category',
-                style: GoogleFonts.spaceGrotesk(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              title: Text('New Category', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: nameCtrl,
-                    style: GoogleFonts.inter(color: Colors.white),
+                    style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       labelText: 'Category Name',
-                      labelStyle: GoogleFonts.inter(
-                        color: Colors.white24,
-                        fontSize: 12,
-                      ),
-                      enabledBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white10),
-                      ),
-                      focusedBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFFBB86FC)),
-                      ),
+                      labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
+                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white10 : Colors.black12)),
+                      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Select Icon",
-                      style: GoogleFonts.inter(
-                        color: Colors.white38,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  Align(alignment: Alignment.centerLeft, child: Text("Select Icon", style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 11, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 14,
@@ -328,22 +240,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     children: icons.map((icon) {
                       final isSelected = selectedIcon == icon.codePoint;
                       return GestureDetector(
-                        onTap: () =>
-                            setState(() => selectedIcon = icon.codePoint),
+                        onTap: () => setState(() => selectedIcon = icon.codePoint),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? const Color(0xFFBB86FC)
-                                : Colors.white.withOpacity(0.03),
+                            color: isSelected ? const Color(0xFFBB86FC) : (isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03)),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            icon,
-                            color: isSelected ? Colors.black : Colors.white70,
-                            size: 20,
-                          ),
+                          child: Icon(icon, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black54), size: 20),
                         ),
                       );
                     }).toList(),
@@ -351,40 +256,16 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 ],
               ),
               actions: [
-                TextButton(
-                  child: Text(
-                    'Discard',
-                    style: GoogleFonts.inter(color: Colors.white38),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                TextButton(child: Text('Discard', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38)), onPressed: () => Navigator.pop(context)),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFBB86FC),
-                    shape: const StadiumBorder(),
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFBB86FC), shape: const StadiumBorder()),
                   onPressed: () {
                     if (nameCtrl.text.isNotEmpty) {
-                      ref
-                          .read(firestoreServiceProvider)
-                          .addCategory(
-                            name: nameCtrl.text,
-                            type: _activeType,
-                            iconCode: selectedIcon,
-                            colorCode: _activeType == 'income'
-                                ? 0xFF03DAC6
-                                : 0xFFCF6679,
-                          );
+                      ref.read(firestoreServiceProvider).addCategory(name: nameCtrl.text, type: _activeType, iconCode: selectedIcon, colorCode: _activeType == 'income' ? 0xFF03DAC6 : 0xFFCF6679);
                       Navigator.pop(context);
                     }
                   },
-                  child: Text(
-                    'Create',
-                    style: GoogleFonts.inter(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Text('Create', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold)),
                 ),
               ],
             );

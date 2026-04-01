@@ -26,19 +26,20 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final activeColor = _type == 'income' ? const Color(0xFF03DAC6) : const Color(0xFFCF6679);
     final accountsAsync = ref.watch(accountsStreamProvider);
     final categoryAsync = ref.watch(categoryStreamProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.only(top: 20, left: 24, right: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 30),
-      decoration: const BoxDecoration(
-        color: Color(0xFF080808),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10)))),
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10)))),
             const SizedBox(height: 24),
             
             _buildTypeToggle(activeColor),
@@ -48,10 +49,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               textAlign: TextAlign.center,
-              style: GoogleFonts.spaceGrotesk(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
+              style: GoogleFonts.spaceGrotesk(fontSize: 48, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: '0.00',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.05)),
+                hintStyle: TextStyle(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
                 prefixText: 'Rs ',
                 prefixStyle: GoogleFonts.inter(color: activeColor, fontSize: 20, fontWeight: FontWeight.w600),
                 border: InputBorder.none,
@@ -60,16 +61,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             const SizedBox(height: 32),
 
             _buildInputWrapper(
+              context: context,
               child: accountsAsync.when(
                 data: (accounts) {
                   if (_selectedAccountId == null && accounts.isNotEmpty) _selectedAccountId = accounts.first.id;
                   return DropdownButtonFormField<String>(
                     value: _selectedAccountId,
-                    dropdownColor: const Color(0xFF121212),
-                    style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+                    dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
+                    style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w500, fontSize: 14),
                     items: accounts.map((acc) => DropdownMenuItem(value: acc.id, child: Text(acc.name))).toList(),
                     onChanged: (val) => setState(() => _selectedAccountId = val),
-                    decoration: _fieldDecoration('Payment Account', Icons.account_balance_wallet_rounded),
+                    decoration: _fieldDecoration(context, 'Payment Account', Icons.account_balance_wallet_rounded),
                   );
                 },
                 loading: () => const LinearProgressIndicator(color: Colors.white10),
@@ -78,8 +80,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             ),
             const SizedBox(height: 16),
             
-            // CATEGORY SECTION WITH ADD/MANAGE BUTTON
             _buildInputWrapper(
+              context: context,
               child: categoryAsync.when(
                 data: (cats) {
                   final filtered = cats.where((c) => c.type == _type).toList();
@@ -89,14 +91,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       Expanded(
                         child: DropdownButtonFormField<String>(
                           value: currentCat,
-                          dropdownColor: const Color(0xFF121212),
-                          style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+                          dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
+                          style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w500, fontSize: 14),
                           items: filtered.map((c) => DropdownMenuItem(value: c.name, child: Text(c.name))).toList(),
                           onChanged: (val) => setState(() => _category = val!),
-                          decoration: _fieldDecoration('Category', Icons.category_rounded),
+                          decoration: _fieldDecoration(context, 'Category', Icons.category_rounded),
                         ),
                       ),
-                      // New Professional "Manage" button for categories
                       Padding(
                         padding: const EdgeInsets.only(right: 12),
                         child: TextButton.icon(
@@ -119,10 +120,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             const SizedBox(height: 16),
 
             _buildInputWrapper(
+              context: context,
               child: TextField(
                 controller: _noteController,
-                style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
-                decoration: _fieldDecoration('Notes', Icons.description_rounded),
+                style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+                decoration: _fieldDecoration(context, 'Notes', Icons.description_rounded),
               ),
             ),
             const SizedBox(height: 32),
@@ -134,7 +136,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: activeColor,
                   foregroundColor: Colors.black,
-                  shape: const StadiumBorder(), // Fully rounded pill shape
+                  shape: const StadiumBorder(),
                   elevation: 0,
                 ),
                 child: _isLoading 
@@ -155,7 +157,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03), 
+        color: Colors.black.withOpacity(0.03), 
         borderRadius: BorderRadius.circular(20), 
       ),
       child: Row(
@@ -173,7 +175,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       child: GestureDetector(
         onTap: () => setState(() {
           _type = value;
-          // Reset category to a valid one for the new type
           _category = 'Food'; 
         }),
         child: AnimatedContainer(
@@ -187,7 +188,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             label, 
             textAlign: TextAlign.center, 
             style: GoogleFonts.inter(
-              color: isSelected ? Colors.black : Colors.white24, 
+              color: isSelected ? Colors.black : Colors.black26, 
               fontWeight: FontWeight.bold, 
               fontSize: 14,
             ),
@@ -197,24 +198,26 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
-  Widget _buildInputWrapper({required Widget child}) {
+  Widget _buildInputWrapper({required BuildContext context, required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF121212),
+        color: isDark ? const Color(0xFF121212) : Colors.black.withOpacity(0.02),
         borderRadius: BorderRadius.circular(24), 
-        border: Border.all(color: Colors.white.withOpacity(0.03)),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05)),
       ),
       child: child,
     );
   }
 
-  InputDecoration _fieldDecoration(String label, IconData icon) {
+  InputDecoration _fieldDecoration(BuildContext context, String label, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
       labelText: label,
-      labelStyle: GoogleFonts.inter(color: Colors.white24, fontSize: 12),
+      labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
       prefixIcon: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Icon(icon, color: Colors.white38, size: 22),
+        child: Icon(icon, color: isDark ? Colors.white38 : Colors.black38, size: 22),
       ),
       border: InputBorder.none,
       contentPadding: const EdgeInsets.symmetric(vertical: 16),
