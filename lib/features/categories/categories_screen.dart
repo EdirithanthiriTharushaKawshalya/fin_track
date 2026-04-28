@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../../core/models/category_model.dart';
+import '../../core/widgets/grid_background.dart';
 
 final categoryStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
   return ref.watch(firestoreServiceProvider).getCategories();
@@ -30,48 +31,52 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          // Adaptive Ambient Glow
-          Positioned(
-            top: -60,
-            left: -60,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: activeColor.withOpacity(isDark ? 0.05 : 0.08),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 90, sigmaY: 90),
-                child: Container(),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                _buildHeader(context),
-                const SizedBox(height: 24),
-                _buildFloatingToggle(context, activeColor),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: categoriesAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
-                    error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
-                    data: (allCategories) {
-                      final filtered = allCategories.where((c) => c.type == _activeType).toList();
-                      return _buildCategoryList(context, filtered, activeColor);
-                    },
-                  ),
+      body: GridBackground(
+        child: Stack(
+          children: [
+            // Adaptive Ambient Glow (BoxShadow instead of BackdropFilter)
+            Positioned(
+              top: -60,
+              left: -60,
+              child: Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: activeColor.withOpacity(isDark ? 0.05 : 0.08),
+                      blurRadius: 90,
+                      spreadRadius: 40,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  _buildHeader(context),
+                  const SizedBox(height: 24),
+                  _buildFloatingToggle(context, activeColor),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: categoriesAsync.when(
+                      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),
+                      error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+                      data: (allCategories) {
+                        final filtered = allCategories.where((c) => c.type == _activeType).toList();
+                        return _buildCategoryList(context, filtered, activeColor);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _buildFAB(),
     );
@@ -182,7 +187,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               leading: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: Color(cat.colorCode).withOpacity(0.1), shape: BoxShape.circle),
-                child: Icon(IconData(cat.iconCode, fontFamily: 'MaterialIcons'), color: Color(cat.colorCode), size: 22),
+                child: Icon(CategoryModel.getIconData(cat.iconCode), color: Color(cat.colorCode), size: 22),
               ),
               title: Text(cat.name, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
               trailing: Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),

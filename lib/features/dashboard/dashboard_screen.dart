@@ -25,7 +25,7 @@ class DashboardScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: transactionsAsync.when(
         data: (transactions) {
           final monthlyTransactions = transactions.where((t) {
@@ -105,9 +105,10 @@ class DashboardScreen extends ConsumerWidget {
               onPressed: () => _showSettingsSheet(context),
               icon: const Icon(Icons.settings_outlined, color: Color(0xFFBB86FC), size: 22),
               style: IconButton.styleFrom(
-                backgroundColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05),
+                backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                side: BorderSide(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+                side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+                elevation: isDark ? 0 : 2,
               ),
             ),
           ],
@@ -119,9 +120,10 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildNavigationControls(WidgetRef ref, DateTime current, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05),
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.transparent),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+        boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Row(
         children: [
@@ -154,7 +156,7 @@ class DashboardScreen extends ConsumerWidget {
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF121212).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+                color: isDark ? const Color(0xFF121212) : Colors.white,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                 border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
               ),
@@ -166,7 +168,7 @@ class DashboardScreen extends ConsumerWidget {
                   Text('Settings', 
                     style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 32),
-                  
+
                   _buildSettingsTile(
                     icon: Icons.person_outline,
                     title: 'User Profile',
@@ -229,7 +231,7 @@ class DashboardScreen extends ConsumerWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.02),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(20),
       ),
       child: ListTile(
@@ -298,7 +300,7 @@ class DashboardScreen extends ConsumerWidget {
 
   void _showDailySummary(BuildContext context, String date, List<dynamic> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     double totalIncome = 0;
     double totalExpense = 0;
     double totalTransfer = 0;
@@ -327,7 +329,7 @@ class DashboardScreen extends ConsumerWidget {
             Text('Daily Summary', style: GoogleFonts.spaceGrotesk(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
             Text(date, style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 14)),
             const SizedBox(height: 32),
-            
+
             _buildSummaryRow(
               label: 'Total Income',
               amount: totalIncome,
@@ -362,9 +364,9 @@ class DashboardScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -403,9 +405,9 @@ class DashboardScreen extends ConsumerWidget {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF121212) : Colors.white,
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05)),
+            border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
             boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
           ),
           child: ListTile(
@@ -431,7 +433,7 @@ class DashboardScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isIncome = t.type == 'income';
     final isTransfer = t.type == 'transfer';
-    
+
     final Color statusColor = isTransfer 
         ? (isDark ? Colors.white54 : Colors.black54) 
         : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
@@ -460,8 +462,9 @@ class DashboardScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.05),
+                color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: statusColor.withOpacity(0.2)),
               ),
               child: Text(
                 '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',

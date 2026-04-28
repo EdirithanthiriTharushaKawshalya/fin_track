@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/widgets/grid_background.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -80,122 +81,125 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      body: Stack(
-        children: [
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFBB86FC).withOpacity(0.15),
+      body: GridBackground(
+        opacity: 0.1,
+        child: Stack(
+          children: [
+            Positioned(
+              top: -100,
+              right: -50,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFBB86FC).withOpacity(0.15),
+                ),
               ),
             ),
-          ),
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFBB86FC).withOpacity(0.2),
-                          blurRadius: 40,
-                          spreadRadius: 5,
-                        )
-                      ],
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFBB86FC).withOpacity(0.2),
+                            blurRadius: 40,
+                            spreadRadius: 5,
+                          )
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.blur_on_rounded,
+                        size: 72,
+                        color: Colors.white,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.blur_on_rounded,
-                      size: 72,
-                      color: Colors.white,
+                    const SizedBox(height: 32),
+                    Text(
+                      'FIN-TRACK',
+                      style: GoogleFonts.inter(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 6,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'FIN-TRACK',
-                    style: GoogleFonts.inter(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 6,
+                    const SizedBox(height: 8),
+                    Text(
+                      'AUTHENTICATION REQUIRED',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.white38,
+                        letterSpacing: 1.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'AUTHENTICATION REQUIRED',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: Colors.white38,
-                      letterSpacing: 1.5,
+                    const SizedBox(height: 48),
+                    _buildGlassInput(
+                      controller: _emailController,
+                      label: 'System ID (Email)',
+                      icon: Icons.alternate_email_rounded,
                     ),
-                  ),
-                  const SizedBox(height: 48),
-                  _buildGlassInput(
-                    controller: _emailController,
-                    label: 'System ID (Email)',
-                    icon: Icons.alternate_email_rounded,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildGlassInput(
-                    controller: _passwordController,
-                    label: 'Access Key',
-                    icon: Icons.lock_open_rounded,
-                    isPassword: true,
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signIn,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFBB86FC),
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30), // Increased roundness
+                    const SizedBox(height: 20),
+                    _buildGlassInput(
+                      controller: _passwordController,
+                      label: 'Access Key',
+                      icon: Icons.lock_open_rounded,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _signIn,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFBB86FC),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30), // Increased roundness
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.black)
+                            : Text(
+                                'AUTHORIZE',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SignupScreen()),
+                        );
+                      },
+                      child: Text(
+                        'Request New Access Account',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF03DAC6),
+                          fontSize: 13,
                         ),
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.black)
-                          : Text(
-                              'AUTHORIZE',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignupScreen()),
-                      );
-                    },
-                    child: Text(
-                      'Request New Access Account',
-                      style: GoogleFonts.inter(
-                        color: const Color(0xFF03DAC6),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

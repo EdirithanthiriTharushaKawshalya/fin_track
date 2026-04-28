@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/widgets/grid_background.dart';
 import 'dart:ui';
 
 class AboutScreen extends StatelessWidget {
@@ -12,76 +13,80 @@ class AboutScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          // Background Aesthetic Glow
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: primaryColor.withOpacity(isDark ? 0.05 : 0.08),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-                child: Container(),
+      body: GridBackground(
+        child: Stack(
+          children: [
+            // Background Aesthetic Glow (BoxShadow instead of BackdropFilter)
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(isDark ? 0.05 : 0.08),
+                      blurRadius: 100,
+                      spreadRadius: 50,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          
-          SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverAppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  expandedHeight: 120,
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: Text('FinTrack', 
-                      style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
-                    centerTitle: false,
-                    titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeroSection(isDark),
-                        const SizedBox(height: 40),
-                        _buildSectionHeader('CORE MISSION', isDark),
-                        const SizedBox(height: 16),
-                        _buildMissionCard(isDark),
-                        const SizedBox(height: 40),
-                        _buildSectionHeader('INNOVATIVE FEATURES', isDark),
-                        const SizedBox(height: 16),
-                        _buildFeatureGrid(isDark),
-                        const SizedBox(height: 60),
-                        _buildDeveloperCard(isDark),
-                        const SizedBox(height: 40),
-                        Center(
-                          child: Text('Version 3.0.0 (Stable)', 
-                            style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                        ),
-                        const SizedBox(height: 40),
-                      ],
+            
+            SafeArea(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : Colors.black, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    expandedHeight: 120,
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: Text('FinTrack', 
+                        style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+                      centerTitle: false,
+                      titlePadding: const EdgeInsets.only(left: 60, bottom: 16),
                     ),
                   ),
-                ),
-              ],
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeroSection(isDark),
+                          const SizedBox(height: 40),
+                          _buildSectionHeader('CORE MISSION', isDark),
+                          const SizedBox(height: 16),
+                          _buildMissionCard(isDark),
+                          const SizedBox(height: 40),
+                          _buildSectionHeader('INNOVATIVE FEATURES', isDark),
+                          const SizedBox(height: 16),
+                          _buildFeatureGrid(isDark),
+                          const SizedBox(height: 60),
+                          _buildDeveloperCard(isDark),
+                          const SizedBox(height: 40),
+                          Center(
+                            child: Text('Version 3.0.0 (Stable)', 
+                              style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:fin_track/core/services/export_service.dart'; // Ensure this ser
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/widgets/grid_background.dart';
 import 'dart:ui';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -111,47 +112,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             fontSize: 18
           )),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            // 1. Profile Header Card
-            _buildProfileCard(context, user, isDark),
-            const SizedBox(height: 32),
-            
-            // 2. Security Section
-            _buildSectionLabel('SECURITY PROTOCOLS', isDark),
-            const SizedBox(height: 16),
-            _buildActionTile(
-              icon: Icons.shield_outlined,
-              title: 'Change Access Key',
-              subtitle: 'Rotate your login credentials',
-              isDark: isDark,
-              onTap: () => _showUpdatePasswordDialog(context),
-            ),
-            
-            const SizedBox(height: 32),
-            
-            // 3. System Section
-            _buildSectionLabel('SYSTEM ACTIONS', isDark),
-            const SizedBox(height: 16),
-            _buildActionTile(
-              icon: Icons.file_download_outlined,
-              title: 'Export Financial Data',
-              subtitle: 'Generate CSV of all records',
-              isDark: isDark,
-              onTap: _handleExport,
-            ),
-            const SizedBox(height: 12),
-            _buildActionTile(
-              icon: Icons.logout_rounded,
-              title: 'Terminate Session',
-              subtitle: 'Securely sign out',
-              color: const Color(0xFFCF6679),
-              isDark: isDark,
-              onTap: () => _showLogoutConfirmation(context),
-            ),
-          ],
+      body: GridBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              // 1. Profile Header Card
+              _buildProfileCard(context, user, isDark),
+              const SizedBox(height: 32),
+              
+              // 2. Security Section
+              _buildSectionLabel('SECURITY PROTOCOLS', isDark),
+              const SizedBox(height: 16),
+              _buildActionTile(
+                icon: Icons.shield_outlined,
+                title: 'Change Access Key',
+                subtitle: 'Rotate your login credentials',
+                isDark: isDark,
+                onTap: () => _showUpdatePasswordDialog(context),
+              ),
+              
+              const SizedBox(height: 32),
+              
+              // 3. System Section
+              _buildSectionLabel('SYSTEM ACTIONS', isDark),
+              const SizedBox(height: 16),
+              _buildActionTile(
+                icon: Icons.file_download_outlined,
+                title: 'Export Financial Data',
+                subtitle: 'Generate CSV of all records',
+                isDark: isDark,
+                onTap: _handleExport,
+              ),
+              const SizedBox(height: 12),
+              _buildActionTile(
+                icon: Icons.logout_rounded,
+                title: 'Terminate Session',
+                subtitle: 'Securely sign out',
+                color: const Color(0xFFCF6679),
+                isDark: isDark,
+                onTap: () => _showLogoutConfirmation(context),
+              ),
+            ],
+          ),
         ),
       ),
     );

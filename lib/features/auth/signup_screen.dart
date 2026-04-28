@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/widgets/grid_background.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -91,101 +92,104 @@ class _SignupScreenState extends State<SignupScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            bottom: -100,
-            left: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                // Reduced visibility to match login page
-                color: const Color(0xFF03DAC6).withOpacity(0.05), 
+      body: GridBackground(
+        opacity: 0.1,
+        child: Stack(
+          children: [
+            Positioned(
+              bottom: -100,
+              left: -50,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  // Reduced visibility to match login page
+                  color: const Color(0xFF03DAC6).withOpacity(0.05), 
+                ),
               ),
             ),
-          ),
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.security_update_good_rounded,
-                    size: 64,
-                    color: Color(0xFF03DAC6),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'CREATE IDENTITY',
-                    style: GoogleFonts.inter(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 4,
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.security_update_good_rounded,
+                      size: 64,
+                      color: Color(0xFF03DAC6),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'INITIALIZING NEW DATABASE ENTRY',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: Colors.white38,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  _buildGlassInput(
-                    controller: _emailController,
-                    label: 'System ID (Email)',
-                    icon: Icons.mail_outline_rounded,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGlassInput(
-                    controller: _passwordController,
-                    label: 'New Access Key',
-                    icon: Icons.lock_outline_rounded,
-                    isPassword: true,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGlassInput(
-                    controller: _confirmPasswordController,
-                    label: 'Confirm Access Key',
-                    icon: Icons.shield_outlined,
-                    isPassword: true,
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _signUp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF03DAC6),
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30), // Increased roundness
-                        ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'CREATE IDENTITY',
+                      style: GoogleFonts.inter(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 4,
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.black)
-                          : Text(
-                              'INITIALIZE ACCOUNT',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'INITIALIZING NEW DATABASE ENTRY',
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: Colors.white38,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    _buildGlassInput(
+                      controller: _emailController,
+                      label: 'System ID (Email)',
+                      icon: Icons.mail_outline_rounded,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGlassInput(
+                      controller: _passwordController,
+                      label: 'New Access Key',
+                      icon: Icons.lock_outline_rounded,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGlassInput(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm Access Key',
+                      icon: Icons.shield_outlined,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _signUp,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF03DAC6),
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30), // Increased roundness
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.black)
+                            : Text(
+                                'INITIALIZE ACCOUNT',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

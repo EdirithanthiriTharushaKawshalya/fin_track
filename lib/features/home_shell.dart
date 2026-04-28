@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/widgets/grid_background.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'accounts/accounts_screen.dart';
 import 'planning/planning_screen.dart';
@@ -27,7 +28,9 @@ class _HomeShellState extends State<HomeShell> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor, 
-      body: _screens[_selectedIndex],
+      body: GridBackground(
+        child: _screens[_selectedIndex],
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -35,12 +38,16 @@ class _HomeShellState extends State<HomeShell> {
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
           ),
-          boxShadow: isDark ? [] : [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.1), 
+              blurRadius: 20, 
+              offset: const Offset(0, -5)
+            )
           ],
           border: Border(
             top: BorderSide(
-              color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05),
+              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
               width: 1,
             ),
           ),

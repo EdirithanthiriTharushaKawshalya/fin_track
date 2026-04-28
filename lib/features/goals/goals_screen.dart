@@ -20,7 +20,7 @@ class GoalsScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: goalsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFBB86FC))),

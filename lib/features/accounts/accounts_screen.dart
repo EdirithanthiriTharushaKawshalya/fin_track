@@ -20,7 +20,7 @@ class AccountsScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -73,9 +73,11 @@ class AccountsScreen extends ConsumerWidget {
           onPressed: () => _showTransferDialog(context, ref),
           icon: const Icon(Icons.swap_horiz, color: Color(0xFFBB86FC), size: 28),
           style: IconButton.styleFrom(
-            backgroundColor: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05), 
+            backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white, 
             padding: const EdgeInsets.all(12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+            elevation: isDark ? 0 : 2,
           ),
         ),
       ],
@@ -102,15 +104,9 @@ class AccountsScreen extends ConsumerWidget {
         height: 120, 
         width: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              accentColor.withOpacity(isDark ? 0.15 : 0.1), 
-              isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.02)
-            ],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-          ),
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: accentColor.withOpacity(isDark ? 0.1 : 0.3)),
+          boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
@@ -121,7 +117,7 @@ class AccountsScreen extends ConsumerWidget {
                 bottom: -15, 
                 child: Icon(
                   isBank ? Icons.account_balance : Icons.account_balance_wallet, 
-                  color: accentColor.withOpacity(isDark ? 0.05 : 0.08), 
+                  color: accentColor.withOpacity(isDark ? 0.05 : 0.1), 
                   size: 110,
                 ),
               ),
