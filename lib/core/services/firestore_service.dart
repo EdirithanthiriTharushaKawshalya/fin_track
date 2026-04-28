@@ -82,6 +82,44 @@ class FirestoreService {
         .map((snapshot) => snapshot.docs.map((doc) => TransactionModel.fromFirestore(doc)).toList());
   }
 
+  Future<void> updateTransaction({
+    required TransactionModel transaction,
+    required double amount,
+    required String type,
+    required String category,
+    required String accountId,
+    String? note,
+  }) async {
+    final batch = _db.batch();
+    
+    // 1. Reverse the effect of the old transaction on the old account
+    if (transaction.accountId != null) {
+      final oldAccountRef = _db.collection('accounts').doc(transaction.accountId);
+      batch.update(oldAccountRef, {
+        'currentBalance': FieldValue.increment(transaction.type == 'income' ? -transaction.amount : transaction.amount),
+      });
+    }
+
+    // 2. Apply the effect of the new transaction values on the new account
+    final newAccountRef = _db.collection('accounts').doc(accountId);
+    batch.update(newAccountRef, {
+      'currentBalance': FieldValue.increment(type == 'income' ? amount : -amount),
+    });
+
+    // 3. Update the transaction document
+    final transactionRef = _db.collection('transactions').doc(transaction.id);
+    batch.update(transactionRef, {
+      'amount': amount,
+      'type': type,
+      'category': category,
+      'accountId': accountId,
+      'note': note ?? "",
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+  }
+
   Future<void> deleteTransaction(TransactionModel transaction) async {
     final batch = _db.batch();
     batch.delete(_db.collection('transactions').doc(transaction.id));

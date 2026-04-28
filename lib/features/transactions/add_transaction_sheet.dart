@@ -1,3 +1,4 @@
+import 'package:fin_track/core/models/transaction_model.dart';
 import 'package:fin_track/features/accounts/accounts_screen.dart';
 import 'package:fin_track/features/categories/categories_screen.dart';
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
@@ -6,20 +7,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
-  const AddTransactionSheet({super.key});
+  final TransactionModel? transaction;
+  const AddTransactionSheet({super.key, this.transaction});
 
   @override
   ConsumerState<AddTransactionSheet> createState() => _AddTransactionSheetState();
 }
 
 class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
-  final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
+  late final TextEditingController _amountController;
+  late final TextEditingController _noteController;
 
-  String _type = 'expense';
-  String _category = ''; 
+  late String _type;
+  late String _category;
   String? _selectedAccountId;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.transaction != null ? widget.transaction!.amount.toStringAsFixed(2) : '',
+    );
+    _noteController = TextEditingController(text: widget.transaction?.note ?? '');
+    _type = widget.transaction?.type ?? 'expense';
+    _category = widget.transaction?.category ?? '';
+    _selectedAccountId = widget.transaction?.accountId;
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +85,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               context: context,
               child: accountsAsync.when(
                 data: (accounts) {
-                  if (_selectedAccountId == null && accounts.isNotEmpty) _selectedAccountId = accounts.first.id;
+                  if (_selectedAccountId == null && accounts.isNotEmpty) {
+                    _selectedAccountId = accounts.first.id;
+                  }
                   return DropdownButtonFormField<String>(
                     value: _selectedAccountId,
                     dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
@@ -145,7 +168,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 child: _isLoading 
                   ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2)) 
                   : Text(
-                      'Save Transaction',
+                      widget.transaction != null ? 'Update Transaction' : 'Save Transaction',
                       style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
               ),
@@ -244,14 +267,28 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
     setState(() => _isLoading = true);
     try {
-      await ref.read(firestoreServiceProvider).addTransactionWithAccount(
-        amount: double.parse(_amountController.text),
-        type: _type,
-        category: finalCategory,
-        date: DateTime.now(),
-        accountId: _selectedAccountId!,
-        note: _noteController.text.trim(),
-      );
+      final firestore = ref.read(firestoreServiceProvider);
+      final amount = double.parse(_amountController.text);
+      
+      if (widget.transaction != null) {
+        await firestore.updateTransaction(
+          transaction: widget.transaction!,
+          amount: amount,
+          type: _type,
+          category: finalCategory,
+          accountId: _selectedAccountId!,
+          note: _noteController.text.trim(),
+        );
+      } else {
+        await firestore.addTransactionWithAccount(
+          amount: amount,
+          type: _type,
+          category: finalCategory,
+          date: DateTime.now(),
+          accountId: _selectedAccountId!,
+          note: _noteController.text.trim(),
+        );
+      }
       Navigator.pop(context);
     } catch (e) {
       setState(() => _isLoading = false);

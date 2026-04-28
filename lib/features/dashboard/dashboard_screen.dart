@@ -240,12 +240,106 @@ class DashboardScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, top: 24, bottom: 12),
-          child: Text(date, style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11, fontWeight: FontWeight.bold)),
+        GestureDetector(
+          onTap: () => _showDailySummary(context, date, items),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 4, top: 24, bottom: 12),
+            child: Row(
+              children: [
+                Text(date, style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Icon(Icons.insights_rounded, size: 12, color: isDark ? Colors.white12 : Colors.black12),
+              ],
+            ),
+          ),
         ),
         ...items.map((t) => _buildTransactionCard(context, ref, t)).toList(),
       ],
+    );
+  }
+
+  void _showDailySummary(BuildContext context, String date, List<dynamic> items) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    double totalIncome = 0;
+    double totalExpense = 0;
+    double totalTransfer = 0;
+
+    for (var t in items) {
+      if (t.type == 'income') totalIncome += t.amount;
+      else if (t.type == 'expense') totalExpense += t.amount;
+      else if (t.type == 'transfer') totalTransfer += t.amount;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF121212) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10)))),
+            const SizedBox(height: 32),
+            Text('Daily Summary', style: GoogleFonts.spaceGrotesk(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            Text(date, style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 14)),
+            const SizedBox(height: 32),
+            
+            _buildSummaryRow(
+              label: 'Total Income',
+              amount: totalIncome,
+              color: const Color(0xFF03DAC6),
+              icon: Icons.add_circle_outline_rounded,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildSummaryRow(
+              label: 'Total Expenses',
+              amount: totalExpense,
+              color: Colors.redAccent,
+              icon: Icons.remove_circle_outline_rounded,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 12),
+            _buildSummaryRow(
+              label: 'Internal Transfers',
+              amount: totalTransfer,
+              color: isDark ? Colors.white54 : Colors.black54,
+              icon: Icons.sync_alt_rounded,
+              isDark: isDark,
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow({required String label, required double amount, required Color color, required IconData icon, required bool isDark}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 16),
+          Text(label, style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.w500)),
+          const Spacer(),
+          Text(
+            CurrencyFormatter.format(amount),
+            style: GoogleFonts.spaceGrotesk(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 
@@ -266,27 +360,127 @@ class DashboardScreen extends ConsumerWidget {
         decoration: BoxDecoration(color: Colors.redAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(28)),
         child: const Icon(Icons.delete_outline, color: Colors.redAccent),
       ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: () => _showTransactionDetails(context, ref, t),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF121212) : Colors.white,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05)),
+            boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(isTransfer ? Icons.sync_alt : (isIncome ? Icons.add : Icons.remove), color: statusColor, size: 20),
+            ),
+            title: Text(t.category, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
+            subtitle: Text(t.note ?? 'No description', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)),
+            trailing: Text(
+              '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+              style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTransactionDetails(BuildContext context, WidgetRef ref, dynamic t) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isIncome = t.type == 'income';
+    final isTransfer = t.type == 'transfer';
+    
+    final Color statusColor = isTransfer 
+        ? (isDark ? Colors.white54 : Colors.black54) 
+        : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF121212) : Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.05)),
-          boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          leading: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(isTransfer ? Icons.sync_alt : (isIncome ? Icons.add : Icons.remove), color: statusColor, size: 20),
-          ),
-          title: Text(t.category, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
-          subtitle: Text(t.note ?? 'No description', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)),
-          trailing: Text(
-            '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
-            style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.bold, fontSize: 17),
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10))),
+            const SizedBox(height: 32),
+            Text(t.category, style: GoogleFonts.spaceGrotesk(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+            const SizedBox(height: 8),
+            Text(
+              '${isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense')} • ${DateFormat('MMM dd, yyyy').format(t.date)}',
+              style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 14),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+                style: GoogleFonts.spaceGrotesk(color: statusColor, fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+            ),
+            if (t.note != null && t.note!.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              Text(
+                t.note!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black87, fontSize: 16),
+              ),
+            ],
+            const SizedBox(height: 40),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ref.read(firestoreServiceProvider).deleteTransaction(t);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                      side: const BorderSide(color: Colors.redAccent),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => AddTransactionSheet(transaction: t),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFBB86FC),
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: const Text('Edit'),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
