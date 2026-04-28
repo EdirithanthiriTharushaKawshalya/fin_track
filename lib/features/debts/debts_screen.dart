@@ -62,9 +62,10 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                 height: 50,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.03),
+                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                   borderRadius: BorderRadius.circular(100),
                   border: Border.all(color: (isDark ? Colors.white : Colors.black).withOpacity(0.05)),
+                  boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
                 ),
                 child: TabBar(
                   controller: _tabController,

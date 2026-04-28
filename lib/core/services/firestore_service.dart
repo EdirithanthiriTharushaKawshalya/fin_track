@@ -174,7 +174,7 @@ class FirestoreService {
   }
 
   Stream<List<GoalModel>> getGoals() {
-    return _db.collection('goals').where('userId', isEqualTo: _userId).orderBy('deadline', descending: false).snapshots()
+    return _db.collection('goals').where('userId', isEqualTo: _userId).snapshots()
         .map((s) => s.docs.map((doc) => GoalModel.fromFirestore(doc)).toList());
   }
 

@@ -7,6 +7,7 @@ class GoalModel {
   final double targetAmount;
   final double savedAmount;
   final DateTime deadline;
+  final DateTime? createdAt;
 
   GoalModel({
     required this.id,
@@ -15,6 +16,7 @@ class GoalModel {
     required this.targetAmount,
     required this.savedAmount,
     required this.deadline,
+    this.createdAt,
   });
 
   factory GoalModel.fromFirestore(DocumentSnapshot doc) {
@@ -26,6 +28,7 @@ class GoalModel {
       targetAmount: (data['targetAmount'] ?? 0.0).toDouble(),
       savedAmount: (data['savedAmount'] ?? 0.0).toDouble(),
       deadline: (data['deadline'] as Timestamp).toDate(),
+      createdAt: data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate() : null,
     );
   }
 
@@ -36,6 +39,7 @@ class GoalModel {
       'targetAmount': targetAmount,
       'savedAmount': savedAmount,
       'deadline': Timestamp.fromDate(deadline),
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
 }

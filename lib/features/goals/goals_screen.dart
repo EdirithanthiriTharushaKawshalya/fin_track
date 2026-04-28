@@ -29,14 +29,31 @@ class GoalsScreen extends ConsumerWidget {
             if (goals.isEmpty) {
               return Center(child: Text("No active targets.", style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12)));
             }
+
+            // Sort logic: Incomplete first (newest first), then completed (newest first)
+            final sortedGoals = List<GoalModel>.from(goals)..sort((a, b) {
+              final aDone = a.savedAmount >= a.targetAmount;
+              final bDone = b.savedAmount >= b.targetAmount;
+              
+              if (aDone != bDone) {
+                return aDone ? 1 : -1; // Incomplete before complete
+              }
+              
+              // Both are same status, sort by createdAt descending
+              final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              return bTime.compareTo(aTime);
+            });
+
             return ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              itemCount: goals.length,
+              itemCount: sortedGoals.length,
               physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                final goal = goals[index];
+                final goal = sortedGoals[index];
                 final progress = (goal.savedAmount / goal.targetAmount).clamp(0.0, 1.0);
                 final percent = (progress * 100).toStringAsFixed(0);
+                final isCompleted = goal.savedAmount >= goal.targetAmount;
 
                 return Dismissible(
                   key: Key(goal.id),
@@ -51,58 +68,79 @@ class GoalsScreen extends ConsumerWidget {
                   onDismissed: (_) => ref.read(firestoreServiceProvider).deleteGoal(goal.id),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [const Color(0xFF03DAC6).withOpacity(0.15), (isDark ? Colors.white : Colors.black).withOpacity(0.03)],
-                        begin: Alignment.topLeft, end: Alignment.bottomRight,
-                      ),
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                       borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: const Color(0xFF03DAC6).withOpacity(isDark ? 0.1 : 0.3)),
+                      boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(goal.title, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
-                            Text('$percent%', style: GoogleFonts.spaceGrotesk(color: const Color(0xFF03DAC6), fontWeight: FontWeight.bold)),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            (isCompleted ? Colors.greenAccent : const Color(0xFF03DAC6)).withOpacity(0.15),
+                            (isDark ? Colors.white : Colors.black).withOpacity(0.02)
                           ],
+                          begin: Alignment.topLeft, end: Alignment.bottomRight,
                         ),
-                        const SizedBox(height: 4),
-                        Text('Target: ${DateFormat('MMM d, y').format(goal.deadline)}', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12)),
-                        const SizedBox(height: 20),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 8,
-                            backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
-                            color: const Color(0xFF03DAC6),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${CurrencyFormatter.format(goal.savedAmount)} / ${CurrencyFormatter.format(goal.targetAmount)}',
-                              style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
-                            ),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF03DAC6),
-                                foregroundColor: Colors.black,
-                                shape: const StadiumBorder(),
-                                elevation: 0,
+                        borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(goal.title, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+                                    if (isCompleted) 
+                                      Text('COMPLETED', style: GoogleFonts.inter(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                                  ],
+                                ),
                               ),
-                              onPressed: () => _showDepositDialog(context, ref, goal),
-                              child: Text('DEPOSIT', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
+                              Text('$percent%', style: GoogleFonts.spaceGrotesk(color: isCompleted ? Colors.greenAccent : const Color(0xFF03DAC6), fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text('Target: ${DateFormat('MMM d, y').format(goal.deadline)}', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 12)),
+                          const SizedBox(height: 20),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(100),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 8,
+                              backgroundColor: (isDark ? Colors.white : Colors.black).withOpacity(0.05),
+                              color: isCompleted ? Colors.greenAccent : const Color(0xFF03DAC6),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${CurrencyFormatter.format(goal.savedAmount)} / ${CurrencyFormatter.format(goal.targetAmount)}',
+                                style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
+                              ),
+                              if (!isCompleted)
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF03DAC6),
+                                    foregroundColor: Colors.black,
+                                    shape: const StadiumBorder(),
+                                    elevation: 0,
+                                  ),
+                                  onPressed: () => _showDepositDialog(context, ref, goal),
+                                  child: Text('DEPOSIT', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
+                                )
+                              else
+                                const Icon(Icons.check_circle_rounded, color: Colors.greenAccent),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
