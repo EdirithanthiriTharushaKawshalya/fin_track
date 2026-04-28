@@ -7,9 +7,11 @@ import 'dart:ui';
 import '../../core/utils/currency_formatter.dart';
 import '../transactions/add_transaction_sheet.dart';
 import 'transaction_provider.dart';
+import 'summary_hint_provider.dart';
 import 'widgets/balance_card.dart';
 import '../../main.dart'; // To access themeProvider
 import '../profile/profile_screen.dart'; // To access ProfileScreen
+import '../about/about_screen.dart'; // To access AboutScreen
 
 final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
@@ -62,7 +64,7 @@ class DashboardScreen extends ConsumerWidget {
                             itemBuilder: (context, index) {
                               final date = dateKeys[index];
                               final items = groupedTransactions[date]!;
-                              return _buildDateGroup(context, ref, date, items);
+                              return _buildDateGroup(context, ref, date, items, index == 0);
                             },
                           ),
                   ),
@@ -193,6 +195,20 @@ class DashboardScreen extends ConsumerWidget {
                       },
                     ),
                   ),
+                  const SizedBox(height: 32),
+                  _buildSettingsTile(
+                    icon: Icons.info_outline_rounded,
+                    title: 'About FinTrack',
+                    subtitle: 'App version and developer info',
+                    isDark: isDark,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AboutScreen()),
+                      );
+                    },
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -235,20 +251,41 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDateGroup(BuildContext context, WidgetRef ref, String date, List<dynamic> items) {
+  Widget _buildDateGroup(BuildContext context, WidgetRef ref, String date, List<dynamic> items, bool isFirst) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final showHint = ref.watch(summaryHintProvider) && isFirst;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
-          onTap: () => _showDailySummary(context, date, items),
+          onTap: () {
+            ref.read(summaryHintProvider.notifier).dismissHint();
+            _showDailySummary(context, date, items);
+          },
           child: Padding(
             padding: const EdgeInsets.only(left: 4, top: 24, bottom: 12),
             child: Row(
               children: [
                 Text(date, style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 8),
-                Icon(Icons.insights_rounded, size: 12, color: isDark ? Colors.white12 : Colors.black12),
+                if (showHint)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: (isDark ? Colors.blueAccent : Colors.blue).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.insights_rounded, size: 10, color: isDark ? Colors.blueAccent : Colors.blue),
+                        const SizedBox(width: 4),
+                        Text('TAP FOR SUMMARY', style: GoogleFonts.inter(color: isDark ? Colors.blueAccent : Colors.blue, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                      ],
+                    ),
+                  )
+                else
+                  Icon(Icons.insights_rounded, size: 12, color: isDark ? Colors.white12 : Colors.black12),
               ],
             ),
           ),
@@ -257,6 +294,7 @@ class DashboardScreen extends ConsumerWidget {
       ],
     );
   }
+
 
   void _showDailySummary(BuildContext context, String date, List<dynamic> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
