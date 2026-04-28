@@ -17,7 +17,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   final _noteController = TextEditingController();
 
   String _type = 'expense';
-  String _category = 'Food';
+  String _category = ''; 
   String? _selectedAccountId;
   bool _isLoading = false;
 
@@ -42,7 +42,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black12, borderRadius: BorderRadius.circular(10)))),
             const SizedBox(height: 24),
             
-            _buildTypeToggle(activeColor),
+            _buildTypeToggle(activeColor, isDark),
             const SizedBox(height: 32),
 
             TextField(
@@ -85,7 +85,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               child: categoryAsync.when(
                 data: (cats) {
                   final filtered = cats.where((c) => c.type == _type).toList();
-                  final currentCat = filtered.any((c) => c.name == _category) ? _category : (filtered.isNotEmpty ? filtered.first.name : null);
+                  final currentCat = filtered.any((c) => c.name == _category) 
+                      ? _category 
+                      : (filtered.isNotEmpty ? filtered.first.name : null);
+                  
                   return Row(
                     children: [
                       Expanded(
@@ -153,29 +156,29 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
-  Widget _buildTypeToggle(Color activeColor) {
+  Widget _buildTypeToggle(Color activeColor, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.03), 
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03), 
         borderRadius: BorderRadius.circular(20), 
       ),
       child: Row(
         children: [
-          _togglePart('Expense', 'expense', const Color(0xFFCF6679)),
-          _togglePart('Income', 'income', const Color(0xFF03DAC6)),
+          _togglePart('Expense', 'expense', const Color(0xFFCF6679), isDark),
+          _togglePart('Income', 'income', const Color(0xFF03DAC6), isDark),
         ],
       ),
     );
   }
 
-  Widget _togglePart(String label, String value, Color color) {
+  Widget _togglePart(String label, String value, Color color, bool isDark) {
     final isSelected = _type == value;
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() {
           _type = value;
-          _category = 'Food'; 
+          _category = ''; 
         }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -188,7 +191,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             label, 
             textAlign: TextAlign.center, 
             style: GoogleFonts.inter(
-              color: isSelected ? Colors.black : Colors.black26, 
+              color: isSelected ? Colors.black : (isDark ? Colors.white38 : Colors.black26), 
               fontWeight: FontWeight.bold, 
               fontSize: 14,
             ),
@@ -226,12 +229,25 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
   Future<void> _submit() async {
     if (_amountController.text.isEmpty || _selectedAccountId == null) return;
+    
+    final categories = ref.read(categoryStreamProvider).value ?? [];
+    final filtered = categories.where((c) => c.type == _type).toList();
+    
+    String finalCategory = _category;
+    if (!filtered.any((c) => c.name == _category)) {
+      if (filtered.isNotEmpty) {
+        finalCategory = filtered.first.name;
+      } else {
+        finalCategory = 'General';
+      }
+    }
+
     setState(() => _isLoading = true);
     try {
       await ref.read(firestoreServiceProvider).addTransactionWithAccount(
         amount: double.parse(_amountController.text),
         type: _type,
-        category: _category,
+        category: finalCategory,
         date: DateTime.now(),
         accountId: _selectedAccountId!,
         note: _noteController.text.trim(),
