@@ -4,21 +4,27 @@ class TransactionModel {
   final String id;
   final String userId;
   final double amount;
-  final String type; // 'income' or 'expense'
+  final double fee; // NEW: Added fee field
+  final String type; // 'income', 'expense', or 'transfer'
   final String category; // e.g., 'Food', 'Salary', 'Rent'
   final DateTime date;
   final String? note;
-  final String? accountId; // NEW: Added accountId field
+  final String? accountId; 
+  final String? fromAccountId; // NEW: Added for transfers
+  final String? toAccountId;   // NEW: Added for transfers
 
   TransactionModel({
     required this.id,
     required this.userId,
     required this.amount,
+    this.fee = 0.0, // Default to 0.0
     required this.type,
     required this.category,
     required this.date,
     this.note,
-    this.accountId, // NEW: Added accountId parameter
+    this.accountId,
+    this.fromAccountId,
+    this.toAccountId,
   });
 
   // Convert Firebase Document to Dart Object
@@ -28,11 +34,14 @@ class TransactionModel {
       id: doc.id,
       userId: data['userId'] ?? '',
       amount: (data['amount'] ?? 0.0).toDouble(),
+      fee: (data['fee'] ?? 0.0).toDouble(), // NEW: Include fee
       type: data['type'] ?? 'expense',
       category: data['category'] ?? 'General',
       date: (data['date'] as Timestamp).toDate(),
       note: data['note'],
-      accountId: data['accountId'], // NEW: Include accountId from Firestore
+      accountId: data['accountId'],
+      fromAccountId: data['fromAccountId'], // NEW: Include fromAccountId
+      toAccountId: data['toAccountId'],     // NEW: Include toAccountId
     );
   }
 
@@ -41,11 +50,14 @@ class TransactionModel {
     return {
       'userId': userId,
       'amount': amount,
+      'fee': fee, // NEW: Include fee
       'type': type,
       'category': category,
       'date': Timestamp.fromDate(date),
       'note': note,
-      'accountId': accountId, // NEW: Include accountId in toMap
+      'accountId': accountId,
+      'fromAccountId': fromAccountId, // NEW: Include fromAccountId
+      'toAccountId': toAccountId,     // NEW: Include toAccountId
     };
   }
 }

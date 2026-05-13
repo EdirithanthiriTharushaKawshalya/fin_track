@@ -124,7 +124,20 @@ class FirestoreService {
     final batch = _db.batch();
     batch.delete(_db.collection('transactions').doc(transaction.id));
 
-    if (transaction.accountId != null && transaction.accountId!.isNotEmpty) {
+    if (transaction.type == 'transfer') {
+      // Reverse transfer: Add (amount + fee) back to source, deduct amount from destination
+      if (transaction.fromAccountId != null) {
+        batch.update(_db.collection('accounts').doc(transaction.fromAccountId), {
+          'currentBalance': FieldValue.increment(transaction.amount + transaction.fee),
+        });
+      }
+      if (transaction.toAccountId != null) {
+        batch.update(_db.collection('accounts').doc(transaction.toAccountId), {
+          'currentBalance': FieldValue.increment(-transaction.amount),
+        });
+      }
+    } else if (transaction.accountId != null && transaction.accountId!.isNotEmpty) {
+      // Standard income/expense reversal
       final accountRef = _db.collection('accounts').doc(transaction.accountId);
       batch.update(accountRef, {
         'currentBalance': FieldValue.increment(transaction.type == 'income' ? -transaction.amount : transaction.amount),
@@ -138,18 +151,28 @@ class FirestoreService {
     required String fromAccountId,
     required String toAccountId,
     required double amount,
+    double fee = 0.0,
   }) async {
     final batch = _db.batch();
-    batch.update(_db.collection('accounts').doc(fromAccountId), {'currentBalance': FieldValue.increment(-amount)});
-    batch.update(_db.collection('accounts').doc(toAccountId), {'currentBalance': FieldValue.increment(amount)});
+    
+    // Deduct amount + fee from source account
+    batch.update(_db.collection('accounts').doc(fromAccountId), {
+      'currentBalance': FieldValue.increment(-(amount + fee))
+    });
+    
+    // Add only amount to destination account
+    batch.update(_db.collection('accounts').doc(toAccountId), {
+      'currentBalance': FieldValue.increment(amount)
+    });
 
     batch.set(_db.collection('transactions').doc(), {
       'userId': _userId,
       'amount': amount,
+      'fee': fee,
       'type': 'transfer',
       'category': 'Transfer',
       'date': Timestamp.now(),
-      'note': 'Internal Transfer',
+      'note': fee > 0 ? 'Internal Transfer (Fee: Rs $fee)' : 'Internal Transfer',
       'fromAccountId': fromAccountId,
       'toAccountId': toAccountId,
       'createdAt': FieldValue.serverTimestamp(),

@@ -286,6 +286,7 @@ class AccountsScreen extends ConsumerWidget {
 
     String fromAccId = accounts.first.id;
     String toAccId = accounts.last.id;
+    bool hasFee = false; // NEW: Track fee checkbox state
 
     showDialog(
       context: context,
@@ -304,6 +305,34 @@ class AccountsScreen extends ConsumerWidget {
                 _buildSimpleDropdown(context, 'To', toAccId, accounts, (val) => setState(() => toAccId = val!)),
                 const SizedBox(height: 16),
                 _buildTextField(context, amountCtrl, 'Amount', isNumber: true, prefix: 'Rs '),
+                const SizedBox(height: 16),
+                
+                // NEW: Fee Checkbox
+                InkWell(
+                  onTap: () => setState(() => hasFee = !hasFee),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: hasFee,
+                          activeColor: const Color(0xFFBB86FC),
+                          onChanged: (val) => setState(() => hasFee = val!),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Apply Transfer Fee', style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, fontWeight: FontWeight.w600)),
+                              Text('Rs 25.00 will be deducted', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -315,10 +344,14 @@ class AccountsScreen extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   if (fromAccId == toAccId) return;
+                  final amount = double.tryParse(amountCtrl.text) ?? 0;
+                  if (amount <= 0) return;
+
                   await ref.read(firestoreServiceProvider).transferMoney(
                     fromAccountId: fromAccId,
                     toAccountId: toAccId,
-                    amount: double.tryParse(amountCtrl.text) ?? 0,
+                    amount: amount,
+                    fee: hasFee ? 25.0 : 0.0,
                   );
                   Navigator.pop(context);
                 },

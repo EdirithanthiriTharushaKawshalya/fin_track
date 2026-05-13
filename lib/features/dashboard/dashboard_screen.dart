@@ -387,7 +387,12 @@ class DashboardScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isIncome = t.type == 'income';
     final isTransfer = t.type == 'transfer';
-    final Color statusColor = isTransfer ? (isDark ? Colors.white54 : Colors.black45) : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
+    final hasFee = isTransfer && (t.fee ?? 0) > 0;
+    
+    // Unified color approach: Use a consistent accent for transfers, but maybe highlight if there's a fee
+    final Color statusColor = isTransfer 
+        ? (hasFee ? Colors.orangeAccent : (isDark ? Colors.white54 : Colors.black45)) 
+        : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
 
     return Dismissible(
       key: Key(t.id),
@@ -419,9 +424,20 @@ class DashboardScreen extends ConsumerWidget {
             ),
             title: Text(t.category, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
             subtitle: Text(t.note ?? 'No description', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)),
-            trailing: Text(
-              '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
-              style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.bold, fontSize: 17),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+                  style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.bold, fontSize: 17),
+                ),
+                if (hasFee)
+                  Text(
+                    '+ Fee: ${CurrencyFormatter.format(t.fee)}',
+                    style: GoogleFonts.inter(color: Colors.redAccent.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+              ],
             ),
           ),
         ),
@@ -466,9 +482,21 @@ class DashboardScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: statusColor.withOpacity(0.2)),
               ),
-              child: Text(
-                '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
-                style: GoogleFonts.spaceGrotesk(color: statusColor, fontSize: 32, fontWeight: FontWeight.bold),
+              child: Column(
+                children: [
+                  Text(
+                    '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+                    style: GoogleFonts.spaceGrotesk(color: statusColor, fontSize: 32, fontWeight: FontWeight.bold),
+                  ),
+                  if (isTransfer && (t.fee ?? 0) > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Transfer Fee: ${CurrencyFormatter.format(t.fee)}',
+                        style: GoogleFonts.inter(color: Colors.redAccent.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                ],
               ),
             ),
             if (t.note != null && t.note!.isNotEmpty) ...[
