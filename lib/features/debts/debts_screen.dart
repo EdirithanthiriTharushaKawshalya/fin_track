@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'dart:ui';
 import '../../core/models/debt_model.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../accounts/accounts_screen.dart'; // Import this
 
 final debtsStreamProvider = StreamProvider<List<DebtModel>>((ref) {
   return ref.watch(firestoreServiceProvider).getDebts();
@@ -123,6 +124,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
         return Dismissible(
           key: Key(debt.id),
           direction: DismissDirection.endToStart,
+          confirmDismiss: (direction) => _confirmSettleDebt(context, debt),
           background: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 24),
@@ -130,7 +132,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
             decoration: BoxDecoration(color: Colors.greenAccent.withOpacity(0.1), borderRadius: BorderRadius.circular(28)),
             child: const Icon(Icons.check_circle_outline, color: Colors.greenAccent),
           ),
-          onDismissed: (_) => ref.read(firestoreServiceProvider).deleteDebt(debt.id),
+          onDismissed: (_) {
+            // Logic is handled in _confirmSettleDebt
+          },
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(20),
@@ -165,6 +169,65 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
           ),
         );
       },
+    );
+  }
+
+  Future<bool?> _confirmSettleDebt(BuildContext context, DebtModel debt) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    String? selectedAccountId = debt.accountId;
+
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final accounts = ref.watch(accountsStreamProvider).value ?? [];
+          if (selectedAccountId == null && accounts.isNotEmpty) {
+            selectedAccountId = accounts.first.id;
+          }
+          
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              title: Text(debt.type == 'lent' ? 'Settled Up?' : 'Paid Back?', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Confirming this will update your account balance and record a transaction on your dashboard.', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13)),
+                  const SizedBox(height: 20),
+                  DropdownButtonFormField<String>(
+                    value: selectedAccountId,
+                    dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
+                    style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: debt.type == 'lent' ? 'Account Receiving Money' : 'Account Paying From',
+                      labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
+                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
+                      focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: const Color(0xFFBB86FC))),
+                    ),
+                    items: accounts.map((acc) => DropdownMenuItem(value: acc.id, child: Text(acc.name))).toList(),
+                    onChanged: (val) => selectedAccountId = val,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF03DAC6), shape: const StadiumBorder()),
+                  onPressed: () {
+                    if (selectedAccountId != null) {
+                      ref.read(firestoreServiceProvider).settleDebt(debt: debt, accountId: selectedAccountId!);
+                      Navigator.pop(context, true);
+                    }
+                  },
+                  child: Text('Confirm', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

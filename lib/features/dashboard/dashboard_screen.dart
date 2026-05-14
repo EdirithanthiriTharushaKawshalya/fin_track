@@ -385,14 +385,36 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildTransactionCard(BuildContext context, WidgetRef ref, dynamic t) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isIncome = t.type == 'income';
+    final isIncome = t.type == 'income' || t.type == 'debt_borrowed' || t.type == 'debt_repayment_received';
     final isTransfer = t.type == 'transfer';
+    final isDebt = t.type.startsWith('debt_');
     final hasFee = isTransfer && (t.fee ?? 0) > 0;
     
-    // Unified color approach: Use a consistent accent for transfers, but maybe highlight if there's a fee
-    final Color statusColor = isTransfer 
-        ? (hasFee ? Colors.orangeAccent : (isDark ? Colors.white54 : Colors.black45)) 
-        : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
+    // Determine color
+    Color statusColor;
+    if (isTransfer) {
+      statusColor = hasFee ? Colors.orangeAccent : (isDark ? Colors.white54 : Colors.black45);
+    } else if (isDebt) {
+      statusColor = const Color(0xFFBB86FC); // Use primary purple for all debt-related
+    } else {
+      statusColor = isIncome ? const Color(0xFF03DAC6) : Colors.redAccent;
+    }
+
+    // Determine Icon
+    IconData iconData;
+    if (isTransfer) {
+      iconData = Icons.sync_alt;
+    } else if (t.type == 'debt_lent') {
+      iconData = Icons.arrow_outward_rounded;
+    } else if (t.type == 'debt_borrowed') {
+      iconData = Icons.arrow_downward_rounded;
+    } else if (t.type == 'debt_repayment_received') {
+      iconData = Icons.assignment_returned_rounded;
+    } else if (t.type == 'debt_repayment_paid') {
+      iconData = Icons.assignment_turned_in_rounded;
+    } else {
+      iconData = isIncome ? Icons.add : Icons.remove;
+    }
 
     return Dismissible(
       key: Key(t.id),
@@ -420,7 +442,7 @@ class DashboardScreen extends ConsumerWidget {
             leading: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: statusColor.withOpacity(0.1), shape: BoxShape.circle),
-              child: Icon(isTransfer ? Icons.sync_alt : (isIncome ? Icons.add : Icons.remove), color: statusColor, size: 20),
+              child: Icon(iconData, color: statusColor, size: 20),
             ),
             title: Text(t.category, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w600, fontSize: 15)),
             subtitle: Text(t.note ?? 'No description', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 12)),
@@ -430,7 +452,7 @@ class DashboardScreen extends ConsumerWidget {
               children: [
                 Text(
                   '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
-                  style: GoogleFonts.spaceGrotesk(color: statusColor, fontWeight: FontWeight.bold, fontSize: 17),
+                  style: GoogleFonts.spaceGrotesk(color: isDebt ? (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent) : statusColor, fontWeight: FontWeight.bold, fontSize: 17),
                 ),
                 if (hasFee)
                   Text(
@@ -447,12 +469,18 @@ class DashboardScreen extends ConsumerWidget {
 
   void _showTransactionDetails(BuildContext context, WidgetRef ref, dynamic t) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isIncome = t.type == 'income';
+    final isIncome = t.type == 'income' || t.type == 'debt_borrowed' || t.type == 'debt_repayment_received';
     final isTransfer = t.type == 'transfer';
+    final isDebt = t.type.startsWith('debt_');
 
-    final Color statusColor = isTransfer 
-        ? (isDark ? Colors.white54 : Colors.black54) 
-        : (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent);
+    Color statusColor;
+    if (isTransfer) {
+      statusColor = (isDark ? Colors.white54 : Colors.black54);
+    } else if (isDebt) {
+      statusColor = const Color(0xFFBB86FC);
+    } else {
+      statusColor = isIncome ? const Color(0xFF03DAC6) : Colors.redAccent;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -471,7 +499,7 @@ class DashboardScreen extends ConsumerWidget {
             Text(t.category, style: GoogleFonts.spaceGrotesk(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
             const SizedBox(height: 8),
             Text(
-              '${isTransfer ? 'Transfer' : (isIncome ? 'Income' : 'Expense')} • ${DateFormat('MMM dd, yyyy').format(t.date)}',
+              '${isTransfer ? 'Transfer' : (isDebt ? 'Debt Transaction' : (isIncome ? 'Income' : 'Expense'))} • ${DateFormat('MMM dd, yyyy').format(t.date)}',
               style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 14),
             ),
             const SizedBox(height: 32),
@@ -486,7 +514,7 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Text(
                     '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
-                    style: GoogleFonts.spaceGrotesk(color: statusColor, fontSize: 32, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.spaceGrotesk(color: isDebt ? (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent) : statusColor, fontSize: 32, fontWeight: FontWeight.bold),
                   ),
                   if (isTransfer && (t.fee ?? 0) > 0)
                     Padding(
@@ -525,28 +553,30 @@ class DashboardScreen extends ConsumerWidget {
                     child: const Text('Delete'),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => AddTransactionSheet(transaction: t),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFBB86FC),
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
+                if (!isDebt) ...[ // Disable editing for debt transactions as they are linked to debts
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => AddTransactionSheet(transaction: t),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFBB86FC),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Edit'),
                     ),
-                    child: const Text('Edit'),
                   ),
-                ),
+                ],
               ],
             ),
           ],

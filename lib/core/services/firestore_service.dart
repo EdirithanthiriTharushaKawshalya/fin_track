@@ -94,16 +94,24 @@ class FirestoreService {
     
     // 1. Reverse the effect of the old transaction on the old account
     if (transaction.accountId != null) {
+      final bool oldActsAsIncome = transaction.type == 'income' || 
+                                    transaction.type == 'debt_borrowed' || 
+                                    transaction.type == 'debt_repayment_received';
+                                    
       final oldAccountRef = _db.collection('accounts').doc(transaction.accountId);
       batch.update(oldAccountRef, {
-        'currentBalance': FieldValue.increment(transaction.type == 'income' ? -transaction.amount : transaction.amount),
+        'currentBalance': FieldValue.increment(oldActsAsIncome ? -transaction.amount : transaction.amount),
       });
     }
 
     // 2. Apply the effect of the new transaction values on the new account
+    final bool newActsAsIncome = type == 'income' || 
+                                  type == 'debt_borrowed' || 
+                                  type == 'debt_repayment_received';
+                                  
     final newAccountRef = _db.collection('accounts').doc(accountId);
     batch.update(newAccountRef, {
-      'currentBalance': FieldValue.increment(type == 'income' ? amount : -amount),
+      'currentBalance': FieldValue.increment(newActsAsIncome ? amount : -amount),
     });
 
     // 3. Update the transaction document
@@ -137,11 +145,21 @@ class FirestoreService {
         });
       }
     } else if (transaction.accountId != null && transaction.accountId!.isNotEmpty) {
-      // Standard income/expense reversal
+      // Determine if this transaction increased or decreased the balance
+      final bool actsAsIncome = transaction.type == 'income' || 
+                                 transaction.type == 'debt_borrowed' || 
+                                 transaction.type == 'debt_repayment_received';
+      
       final accountRef = _db.collection('accounts').doc(transaction.accountId);
       batch.update(accountRef, {
-        'currentBalance': FieldValue.increment(transaction.type == 'income' ? -transaction.amount : transaction.amount),
+        'currentBalance': FieldValue.increment(actsAsIncome ? -transaction.amount : transaction.amount),
       });
+
+      // Professional Cleanup: If we delete the initial debt transaction, we should also remove the debt record
+      // to maintain system integrity.
+      if ((transaction.type == 'debt_lent' || transaction.type == 'debt_borrowed') && transaction.relatedId != null) {
+        batch.delete(_db.collection('debts').doc(transaction.relatedId));
+      }
     }
     await batch.commit();
   }
@@ -201,11 +219,83 @@ class FirestoreService {
         .map((s) => s.docs.map((doc) => GoalModel.fromFirestore(doc)).toList());
   }
 
-  Future<void> addDebt({required String personName, required double amount, required String type, required DateTime dueDate}) async {
-    await _db.collection('debts').add({
-      'userId': _userId, 'personName': personName, 'amount': amount, 'type': type,
-      'dueDate': Timestamp.fromDate(dueDate), 'createdAt': FieldValue.serverTimestamp(),
+  Future<void> addDebt({
+    required String personName,
+    required double amount,
+    required String type,
+    required DateTime dueDate,
+    String? accountId,
+  }) async {
+    final batch = _db.batch();
+    final debtRef = _db.collection('debts').doc();
+    
+    batch.set(debtRef, {
+      'userId': _userId,
+      'personName': personName,
+      'amount': amount,
+      'type': type,
+      'dueDate': Timestamp.fromDate(dueDate),
+      'accountId': accountId,
+      'createdAt': FieldValue.serverTimestamp(),
     });
+
+    if (accountId != null && accountId.isNotEmpty) {
+      final accountRef = _db.collection('accounts').doc(accountId);
+      // If lent (giving money), deduct from account. If borrowed (receiving money), add to account.
+      batch.update(accountRef, {
+        'currentBalance': FieldValue.increment(type == 'lent' ? -amount : amount),
+      });
+
+      // Add a transaction record for the homepage
+      final transactionRef = _db.collection('transactions').doc();
+      batch.set(transactionRef, {
+        'userId': _userId,
+        'amount': amount,
+        'type': type == 'lent' ? 'debt_lent' : 'debt_borrowed',
+        'category': type == 'lent' ? 'Money Lent' : 'Money Borrowed',
+        'date': Timestamp.now(),
+        'accountId': accountId,
+        'note': type == 'lent' ? 'Lent money to $personName' : 'Borrowed money from $personName',
+        'relatedId': debtRef.id, // LINKED HERE
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+  }
+
+  Future<void> settleDebt({
+    required DebtModel debt,
+    required String accountId,
+  }) async {
+    final batch = _db.batch();
+    
+    // 1. Delete the debt
+    batch.delete(_db.collection('debts').doc(debt.id));
+
+    // 2. Update account balance
+    // If it was lent, receiving it back adds to balance.
+    // If it was borrowed, paying it back deducts from balance.
+    final accountRef = _db.collection('accounts').doc(accountId);
+    batch.update(accountRef, {
+      'currentBalance': FieldValue.increment(debt.type == 'lent' ? debt.amount : -debt.amount),
+    });
+
+    // 3. Record repayment transaction
+    final transactionRef = _db.collection('transactions').doc();
+    batch.set(transactionRef, {
+      'userId': _userId,
+      'amount': debt.amount,
+      'type': debt.type == 'lent' ? 'debt_repayment_received' : 'debt_repayment_paid',
+      'category': debt.type == 'lent' ? 'Debt Repayment' : 'Debt Paid',
+      'date': Timestamp.now(),
+      'accountId': accountId,
+      'note': debt.type == 'lent' ? 'Received repayment from ${debt.personName}' : 'Repaid debt to ${debt.personName}',
+      'relatedId': debt.id, // LINKED HERE
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
   }
 
   Future<void> deleteDebt(String id) async { await _db.collection('debts').doc(id).delete(); }

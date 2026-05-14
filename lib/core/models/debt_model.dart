@@ -7,6 +7,7 @@ class DebtModel {
   final double amount;
   final String type; // 'borrowed' (I owe) or 'lent' (Owed to me)
   final DateTime dueDate;
+  final String? accountId;
 
   DebtModel({
     required this.id,
@@ -15,6 +16,7 @@ class DebtModel {
     required this.amount,
     required this.type,
     required this.dueDate,
+    this.accountId,
   });
 
   factory DebtModel.fromFirestore(DocumentSnapshot doc) {
@@ -26,6 +28,18 @@ class DebtModel {
       amount: (data['amount'] ?? 0.0).toDouble(),
       type: data['type'] ?? 'borrowed',
       dueDate: (data['dueDate'] as Timestamp).toDate(),
+      accountId: data['accountId'],
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'personName': personName,
+      'amount': amount,
+      'type': type,
+      'dueDate': Timestamp.fromDate(dueDate),
+      'accountId': accountId,
+    };
   }
 }

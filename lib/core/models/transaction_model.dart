@@ -12,6 +12,7 @@ class TransactionModel {
   final String? accountId; 
   final String? fromAccountId; // NEW: Added for transfers
   final String? toAccountId;   // NEW: Added for transfers
+  final String? relatedId;     // NEW: Link to Debt or other entities
 
   TransactionModel({
     required this.id,
@@ -25,6 +26,7 @@ class TransactionModel {
     this.accountId,
     this.fromAccountId,
     this.toAccountId,
+    this.relatedId,
   });
 
   // Convert Firebase Document to Dart Object
@@ -42,6 +44,7 @@ class TransactionModel {
       accountId: data['accountId'],
       fromAccountId: data['fromAccountId'], // NEW: Include fromAccountId
       toAccountId: data['toAccountId'],     // NEW: Include toAccountId
+      relatedId: data['relatedId'],         // NEW: Include relatedId
     );
   }
 
@@ -58,6 +61,7 @@ class TransactionModel {
       'accountId': accountId,
       'fromAccountId': fromAccountId, // NEW: Include fromAccountId
       'toAccountId': toAccountId,     // NEW: Include toAccountId
+      'relatedId': relatedId,         // NEW: Include relatedId
     };
   }
 }
