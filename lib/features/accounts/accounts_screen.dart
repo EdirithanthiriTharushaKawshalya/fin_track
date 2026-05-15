@@ -123,15 +123,47 @@ class AccountsScreen extends ConsumerWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(acc.name, style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black54, fontWeight: FontWeight.w600, fontSize: 14)),
-                    const SizedBox(height: 4),
-                    Text(
-                      CurrencyFormatter.format(acc.currentBalance), 
-                      style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.w700),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(acc.name, style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black54, fontWeight: FontWeight.w600, fontSize: 14)),
+                          const SizedBox(height: 4),
+                          Text(
+                            CurrencyFormatter.format(acc.currentBalance), 
+                            style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert, color: isDark ? Colors.white24 : Colors.black26),
+                      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      onSelected: (val) async {
+                        if (val == 'delete') {
+                          final confirmed = await _confirmDeletion(context);
+                          if (confirmed == true) {
+                            ref.read(firestoreServiceProvider).deleteAccount(acc.id);
+                          }
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                              const SizedBox(width: 12),
+                              Text('Delete', style: GoogleFonts.inter(color: Colors.redAccent, fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

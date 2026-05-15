@@ -5,6 +5,7 @@ class DebtModel {
   final String userId;
   final String personName;
   final double amount;
+  final double paidAmount; // Added for installments
   final String type; // 'borrowed' (I owe) or 'lent' (Owed to me)
   final DateTime dueDate;
   final String? accountId;
@@ -14,10 +15,14 @@ class DebtModel {
     required this.userId,
     required this.personName,
     required this.amount,
+    this.paidAmount = 0.0,
     required this.type,
     required this.dueDate,
     this.accountId,
   });
+
+  double get remainingAmount => amount - paidAmount;
+  bool get isSettled => paidAmount >= amount;
 
   factory DebtModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -26,6 +31,7 @@ class DebtModel {
       userId: data['userId'] ?? '',
       personName: data['personName'] ?? 'Unknown',
       amount: (data['amount'] ?? 0.0).toDouble(),
+      paidAmount: (data['paidAmount'] ?? 0.0).toDouble(),
       type: data['type'] ?? 'borrowed',
       dueDate: (data['dueDate'] as Timestamp).toDate(),
       accountId: data['accountId'],
@@ -37,6 +43,7 @@ class DebtModel {
       'userId': userId,
       'personName': personName,
       'amount': amount,
+      'paidAmount': paidAmount,
       'type': type,
       'dueDate': Timestamp.fromDate(dueDate),
       'accountId': accountId,

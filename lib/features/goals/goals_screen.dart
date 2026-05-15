@@ -101,7 +101,34 @@ class GoalsScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              Text('$percent%', style: GoogleFonts.spaceGrotesk(color: isCompleted ? Colors.greenAccent : const Color(0xFF03DAC6), fontWeight: FontWeight.bold)),
+                              Row(
+                                children: [
+                                  Text('$percent%', style: GoogleFonts.spaceGrotesk(color: isCompleted ? Colors.greenAccent : const Color(0xFF03DAC6), fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 8),
+                                  PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert, color: isDark ? Colors.white24 : Colors.black26, size: 20),
+                                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    onSelected: (val) {
+                                      if (val == 'delete') {
+                                        ref.read(firestoreServiceProvider).deleteGoal(goal.id);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                            const SizedBox(width: 12),
+                                            Text('Delete', style: GoogleFonts.inter(color: Colors.redAccent, fontWeight: FontWeight.w500)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4),

@@ -419,6 +419,7 @@ class DashboardScreen extends ConsumerWidget {
     return Dismissible(
       key: Key(t.id),
       direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) => _showDeleteConfirmation(context),
       onDismissed: (direction) => ref.read(firestoreServiceProvider).deleteTransaction(t),
       background: Container(
         alignment: Alignment.centerRight,
@@ -578,6 +579,30 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showDeleteConfirmation(BuildContext context) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          title: Text('Delete Transaction?', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          content: Text('Are you sure you want to remove this record? This action cannot be undone.', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: const StadiumBorder()),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('Delete', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),

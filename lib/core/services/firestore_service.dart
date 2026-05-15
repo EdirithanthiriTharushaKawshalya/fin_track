@@ -155,10 +155,18 @@ class FirestoreService {
         'currentBalance': FieldValue.increment(actsAsIncome ? -transaction.amount : transaction.amount),
       });
 
-      // Professional Cleanup: If we delete the initial debt transaction, we should also remove the debt record
-      // to maintain system integrity.
-      if ((transaction.type == 'debt_lent' || transaction.type == 'debt_borrowed') && transaction.relatedId != null) {
-        batch.delete(_db.collection('debts').doc(transaction.relatedId));
+      // Handle debt-related transactions
+      if (transaction.relatedId != null) {
+        if (transaction.type == 'debt_lent' || transaction.type == 'debt_borrowed') {
+          // Cleanup: If we delete the initial debt transaction, remove the debt record
+          batch.delete(_db.collection('debts').doc(transaction.relatedId));
+        } else if (transaction.type == 'debt_repayment_received' || transaction.type == 'debt_repayment_paid') {
+          // Logic Fix: If we delete a repayment, decrease the debt's paidAmount
+          final debtRef = _db.collection('debts').doc(transaction.relatedId);
+          batch.update(debtRef, {
+            'paidAmount': FieldValue.increment(-transaction.amount),
+          });
+        }
       }
     }
     await batch.commit();
@@ -268,30 +276,53 @@ class FirestoreService {
     required DebtModel debt,
     required String accountId,
   }) async {
+    // Settle the full remaining amount
+    await recordDebtPayment(
+      debt: debt,
+      accountId: accountId,
+      paymentAmount: debt.remainingAmount,
+    );
+  }
+
+  Future<void> recordDebtPayment({
+    required DebtModel debt,
+    required String accountId,
+    required double paymentAmount,
+  }) async {
     final batch = _db.batch();
-    
-    // 1. Delete the debt
-    batch.delete(_db.collection('debts').doc(debt.id));
+    final newPaidAmount = debt.paidAmount + paymentAmount;
+    final isFullyPaid = newPaidAmount >= debt.amount;
+
+    // 1. Update or Delete the debt
+    if (isFullyPaid) {
+      batch.delete(_db.collection('debts').doc(debt.id));
+    } else {
+      batch.update(_db.collection('debts').doc(debt.id), {
+        'paidAmount': newPaidAmount,
+      });
+    }
 
     // 2. Update account balance
-    // If it was lent, receiving it back adds to balance.
-    // If it was borrowed, paying it back deducts from balance.
+    // If it was lent, receiving payment adds to balance.
+    // If it was borrowed, making payment deducts from balance.
     final accountRef = _db.collection('accounts').doc(accountId);
     batch.update(accountRef, {
-      'currentBalance': FieldValue.increment(debt.type == 'lent' ? debt.amount : -debt.amount),
+      'currentBalance': FieldValue.increment(debt.type == 'lent' ? paymentAmount : -paymentAmount),
     });
 
-    // 3. Record repayment transaction
+    // 3. Record payment transaction
     final transactionRef = _db.collection('transactions').doc();
     batch.set(transactionRef, {
       'userId': _userId,
-      'amount': debt.amount,
+      'amount': paymentAmount,
       'type': debt.type == 'lent' ? 'debt_repayment_received' : 'debt_repayment_paid',
       'category': debt.type == 'lent' ? 'Debt Repayment' : 'Debt Paid',
       'date': Timestamp.now(),
       'accountId': accountId,
-      'note': debt.type == 'lent' ? 'Received repayment from ${debt.personName}' : 'Repaid debt to ${debt.personName}',
-      'relatedId': debt.id, // LINKED HERE
+      'note': debt.type == 'lent' 
+          ? 'Received payment from ${debt.personName}${isFullyPaid ? " (Fully Settled)" : " (Partial Payment)"}' 
+          : 'Paid towards debt to ${debt.personName}${isFullyPaid ? " (Fully Settled)" : " (Partial Payment)"}',
+      'relatedId': debt.id,
       'createdAt': FieldValue.serverTimestamp(),
     });
 

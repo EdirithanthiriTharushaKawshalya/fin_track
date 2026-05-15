@@ -149,7 +149,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildAnalysisView(BuildContext context, List<TransactionModel> transactions, {required String type}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final filtered = transactions.where((t) => t.type == type).toList();
+    
+    final filtered = transactions.where((t) {
+      if (type == 'income') {
+        return t.type == 'income' || t.type == 'debt_borrowed' || t.type == 'debt_repayment_received';
+      } else {
+        return t.type == 'expense' || t.type == 'debt_lent' || t.type == 'debt_repayment_paid';
+      }
+    }).toList();
 
     if (filtered.isEmpty) {
       return Center(child: Text("No records for this period.", style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12)));
