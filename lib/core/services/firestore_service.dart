@@ -329,7 +329,39 @@ class FirestoreService {
     await batch.commit();
   }
 
-  Future<void> deleteDebt(String id) async { await _db.collection('debts').doc(id).delete(); }
+  Future<void> deleteDebt(DebtModel debt) async {
+    final batch = _db.batch();
+    
+    // 1. Find all related transactions
+    final transactionsQuery = await _db.collection('transactions')
+        .where('userId', isEqualTo: _userId)
+        .where('relatedId', isEqualTo: debt.id)
+        .get();
+
+    for (var doc in transactionsQuery.docs) {
+      final transaction = TransactionModel.fromFirestore(doc);
+      
+      // 2. Reverse account balance for each transaction
+      if (transaction.accountId != null && transaction.accountId!.isNotEmpty) {
+        final bool actsAsIncome = transaction.type == 'income' || 
+                                   transaction.type == 'debt_borrowed' || 
+                                   transaction.type == 'debt_repayment_received';
+        
+        final accountRef = _db.collection('accounts').doc(transaction.accountId);
+        batch.update(accountRef, {
+          'currentBalance': FieldValue.increment(actsAsIncome ? -transaction.amount : transaction.amount),
+        });
+      }
+      
+      // 3. Delete the transaction
+      batch.delete(doc.reference);
+    }
+
+    // 4. Delete the debt document
+    batch.delete(_db.collection('debts').doc(debt.id));
+
+    await batch.commit();
+  }
 
   Stream<List<DebtModel>> getDebts() {
     return _db.collection('debts').where('userId', isEqualTo: _userId).orderBy('dueDate', descending: false).snapshots()

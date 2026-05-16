@@ -225,13 +225,13 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
           backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
           title: Text('Delete Record?', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
-          content: Text('Are you sure you want to remove this record? This will not affect your account balances.', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13)),
+          content: Text('Are you sure you want to remove this record? This will also delete all associated transactions and reverse their impact on your account balances.', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 13)),
           actions: [
             TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: const StadiumBorder()),
               onPressed: () {
-                ref.read(firestoreServiceProvider).deleteDebt(debt.id);
+                ref.read(firestoreServiceProvider).deleteDebt(debt);
                 Navigator.pop(context, true);
               },
               child: Text('Delete', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -303,7 +303,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                         labelText: debt.type == 'lent' ? 'Account Receiving Money' : 'Account Paying From',
                         labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
                         enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
-                        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: const Color(0xFFBB86FC))),
+                        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
                       ),
                       items: accounts.map((acc) => DropdownMenuItem(value: acc.id, child: Text(acc.name))).toList(),
                       onChanged: (val) => selectedAccountId = val,
