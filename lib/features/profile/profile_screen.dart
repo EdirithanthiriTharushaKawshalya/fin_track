@@ -96,74 +96,77 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, 
-            color: isDark ? Colors.white : Colors.black, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text('Identity Control', 
-          style: GoogleFonts.spaceGrotesk(
-            color: isDark ? Colors.white : Colors.black, 
-            fontWeight: FontWeight.bold, 
-            fontSize: 18
-          )),
-      ),
       body: GridBackground(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-            children: [
-              // 1. Profile Header Card
-              _buildProfileCard(context, user, isDark),
-              const SizedBox(height: 32),
-              
-              // 2. Security Section
-              _buildSectionLabel('SECURITY PROTOCOLS', isDark),
-              const SizedBox(height: 16),
-              _buildActionTile(
-                icon: Icons.shield_outlined,
-                title: 'Change Access Key',
-                subtitle: 'Rotate your login credentials',
-                isDark: isDark,
-                onTap: () => _showUpdatePasswordDialog(context),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                centerTitle: true,
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back_ios_new_rounded, 
+                    color: isDark ? Colors.white : Colors.black, size: 20),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: Text('Identity Control', 
+                  style: GoogleFonts.spaceGrotesk(
+                    color: isDark ? Colors.white : Colors.black, 
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 18
+                  )),
               ),
-              
-              const SizedBox(height: 32),
-              
-              // 3. System Section
-              _buildSectionLabel('SYSTEM ACTIONS', isDark),
-              const SizedBox(height: 16),
-              _buildActionTile(
-                icon: Icons.file_download_outlined,
-                title: 'Export Financial Data',
-                subtitle: 'Generate CSV of all records',
-                isDark: isDark,
-                onTap: _handleExport,
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    // 1. Profile Header Card
+                    _buildProfileCard(context, user, isDark),
+                    const SizedBox(height: 32),
+                    
+                    // 2. Security Section
+                    _buildSectionLabel('SECURITY PROTOCOLS', isDark),
+                    const SizedBox(height: 16),
+                    _buildActionTile(
+                      icon: Icons.shield_outlined,
+                      title: 'Change Access Key',
+                      subtitle: 'Rotate your login credentials',
+                      isDark: isDark,
+                      onTap: () => _showUpdatePasswordDialog(context),
+                    ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // 3. System Section
+                    _buildSectionLabel('SYSTEM ACTIONS', isDark),
+                    const SizedBox(height: 16),
+                    _buildActionTile(
+                      icon: Icons.file_download_outlined,
+                      title: 'Export Financial Data',
+                      subtitle: 'Generate CSV of all records',
+                      isDark: isDark,
+                      onTap: _handleExport,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildActionTile(
+                      icon: Icons.logout_rounded,
+                      title: 'Terminate Session',
+                      subtitle: 'Securely sign out',
+                      color: const Color(0xFFCF6679),
+                      isDark: isDark,
+                      onTap: () => _showLogoutConfirmation(context),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              _buildActionTile(
-                icon: Icons.logout_rounded,
-                title: 'Terminate Session',
-                subtitle: 'Securely sign out',
-                color: const Color(0xFFCF6679),
-                isDark: isDark,
-                onTap: () => _showLogoutConfirmation(context),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 
   Widget _buildProfileCard(BuildContext context, User? user, bool isDark) {
     return Container(
