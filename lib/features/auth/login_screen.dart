@@ -30,10 +30,17 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } on FirebaseAuthException catch (e) {
+      String errorMessage = e.message ?? 'Auth Error';
+      
+      // Workaround for Firebase Auth on Windows returning 'internal error' for invalid credentials
+      if (e.code == 'internal-error' || errorMessage.contains('An internal error has occurred')) {
+        errorMessage = 'Invalid System ID or Access Key. Please try again.';
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'Auth Error'),
+            content: Text(errorMessage),
             backgroundColor: Colors.redAccent.withOpacity(0.8),
             behavior: SnackBarBehavior.floating,
           ),

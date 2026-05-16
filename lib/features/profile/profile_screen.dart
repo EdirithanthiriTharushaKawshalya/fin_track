@@ -113,9 +113,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           )),
       ),
       body: GridBackground(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
             children: [
               // 1. Profile Header Card
               _buildProfileCard(context, user, isDark),
@@ -157,8 +160,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildProfileCard(BuildContext context, User? user, bool isDark) {
     return Container(

@@ -14,8 +14,11 @@ class AboutScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: GridBackground(
-        child: Stack(
-          children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Stack(
+              children: [
             // Background Aesthetic Glow (BoxShadow instead of BackdropFilter)
             Positioned(
               top: -100,
@@ -88,8 +91,10 @@ class AboutScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 
   Widget _buildHeroSection(bool isDark) {
     return Column(

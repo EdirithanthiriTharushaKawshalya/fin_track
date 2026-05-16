@@ -33,10 +33,14 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       if (mounted) Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
+      String errorMessage = e.message ?? 'Registration Failed';
+      if (e.code == 'internal-error' || errorMessage.contains('An internal error has occurred')) {
+        errorMessage = 'Failed to create identity. The system ID might already be registered or invalid.';
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'Registration Failed'),
+            content: Text(errorMessage),
             backgroundColor: Colors.redAccent.withOpacity(0.8),
           ),
         );
