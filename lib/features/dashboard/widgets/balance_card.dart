@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../transaction_provider.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/services/currency_provider.dart';
 
 class BalanceCard extends ConsumerWidget {
   const BalanceCard({super.key});
@@ -11,6 +12,7 @@ class BalanceCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final portfolio = ref.watch(portfolioProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
 
     final balance = portfolio['balance'] as double;
     final income = portfolio['income'] as double;
@@ -67,7 +69,7 @@ class BalanceCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    CurrencyFormatter.format(balance),
+                    CurrencyFormatter.format(balance, currency: currency),
                     style: GoogleFonts.spaceGrotesk(
                       color: isDark ? Colors.white : Colors.black, 
                       fontSize: 38, 
@@ -84,11 +86,11 @@ class BalanceCard extends ConsumerWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildStatColumn(context, 'Income', income, const Color(0xFF03DAC6), Icons.arrow_downward),
+                          child: _buildStatColumn(context, ref, 'Income', income, const Color(0xFF03DAC6), Icons.arrow_downward),
                         ),
                         Container(height: 30, width: 1, color: isDark ? Colors.white10 : Colors.black12),
                         Expanded(
-                          child: _buildStatColumn(context, 'Expenses', expense, const Color(0xFFFF0266), Icons.arrow_upward, crossAxis: CrossAxisAlignment.end),
+                          child: _buildStatColumn(context, ref, 'Expenses', expense, const Color(0xFFFF0266), Icons.arrow_upward, crossAxis: CrossAxisAlignment.end),
                         ),
                       ],
                     ),
@@ -102,8 +104,9 @@ class BalanceCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatColumn(BuildContext context, String label, double value, Color color, IconData icon, {CrossAxisAlignment crossAxis = CrossAxisAlignment.start}) {
+  Widget _buildStatColumn(BuildContext context, WidgetRef ref, String label, double value, Color color, IconData icon, {CrossAxisAlignment crossAxis = CrossAxisAlignment.start}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     return Column(
       crossAxisAlignment: crossAxis,
       children: [
@@ -125,7 +128,7 @@ class BalanceCard extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          CurrencyFormatter.format(value),
+          CurrencyFormatter.format(value, currency: currency),
           style: GoogleFonts.spaceGrotesk(color: color, fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ],

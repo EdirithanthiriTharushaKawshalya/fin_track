@@ -2,19 +2,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/grid_background.dart';
+import '../../core/models/currency_model.dart';
+import '../../core/services/currency_provider.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  String _selectedCurrencyCode = 'LKR';
   bool _isLoading = false;
 
   Future<void> _signUp() async {
@@ -31,6 +35,10 @@ class _SignupScreenState extends State<SignupScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      // Save selected currency
+      await ref.read(currencyProvider.notifier).setCurrency(_selectedCurrencyCode);
+
       if (mounted) Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       String errorMessage = e.message ?? 'Registration Failed';
@@ -57,13 +65,13 @@ class _SignupScreenState extends State<SignupScreen> {
     bool isPassword = false,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30), // Increased roundness
+      borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(30), // Increased roundness
+            borderRadius: BorderRadius.circular(30),
             border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
           child: TextField(
@@ -76,6 +84,44 @@ class _SignupScreenState extends State<SignupScreen> {
               labelStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrencyDropdown() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedCurrencyCode,
+              dropdownColor: const Color(0xFF1A1A1A),
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF03DAC6)),
+              isExpanded: true,
+              hint: Text('Select Base Currency', style: GoogleFonts.inter(color: Colors.white38, fontSize: 14)),
+              style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
+              items: supportedCurrencies.map((Currency currency) {
+                return DropdownMenuItem<String>(
+                  value: currency.code,
+                  child: Text('${currency.code} (${currency.symbol.trim()})'),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  setState(() => _selectedCurrencyCode = newValue);
+                }
+              },
             ),
           ),
         ),
@@ -108,7 +154,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  // Reduced visibility to match login page
                   color: const Color(0xFF03DAC6).withOpacity(0.05), 
                 ),
               ),
@@ -165,6 +210,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       icon: Icons.shield_outlined,
                       isPassword: true,
                     ),
+                    const SizedBox(height: 16),
+                    _buildCurrencyDropdown(),
                     const SizedBox(height: 40),
                     SizedBox(
                       width: double.infinity,
@@ -176,7 +223,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           foregroundColor: Colors.black,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30), // Increased roundness
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
                         child: _isLoading

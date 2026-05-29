@@ -1,4 +1,5 @@
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
+import 'package:fin_track/core/services/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +19,7 @@ class GoalsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final goalsAsync = ref.watch(goalsStreamProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -148,7 +150,7 @@ class GoalsScreen extends ConsumerWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${CurrencyFormatter.format(goal.savedAmount)} / ${CurrencyFormatter.format(goal.targetAmount)}',
+                                '${CurrencyFormatter.format(goal.savedAmount, currency: currency)} / ${CurrencyFormatter.format(goal.targetAmount, currency: currency)}',
                                 style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
                               ),
                               if (!isCompleted)
@@ -182,6 +184,7 @@ class GoalsScreen extends ConsumerWidget {
   void _showDepositDialog(BuildContext context, WidgetRef ref, GoalModel goal) {
     final amountCtrl = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.read(currencyProvider);
     showDialog(
       context: context,
       builder: (context) => BackdropFilter(
@@ -197,7 +200,7 @@ class GoalsScreen extends ConsumerWidget {
             decoration: InputDecoration(
               labelText: 'Amount',
               labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
-              prefixText: 'Rs ',
+              prefixText: currency.symbol,
               prefixStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
               enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
               focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF03DAC6))),

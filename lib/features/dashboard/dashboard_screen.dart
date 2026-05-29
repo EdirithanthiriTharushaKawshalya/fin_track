@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/services/currency_provider.dart';
 import '../transactions/add_transaction_sheet.dart';
 import 'transaction_provider.dart';
 import 'summary_hint_provider.dart';
@@ -22,7 +23,6 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final transactionsAsync = ref.watch(transactionStreamProvider);
     final selectedDate = ref.watch(selectedDateProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -263,7 +263,7 @@ class DashboardScreen extends ConsumerWidget {
         GestureDetector(
           onTap: () {
             ref.read(summaryHintProvider.notifier).dismissHint();
-            _showDailySummary(context, date, items);
+            _showDailySummary(context, ref, date, items);
           },
           child: Padding(
             padding: const EdgeInsets.only(left: 4, top: 24, bottom: 12),
@@ -298,8 +298,9 @@ class DashboardScreen extends ConsumerWidget {
   }
 
 
-  void _showDailySummary(BuildContext context, String date, List<dynamic> items) {
+  void _showDailySummary(BuildContext context, WidgetRef ref, String date, List<dynamic> items) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.read(currencyProvider);
 
     double totalIncome = 0;
     double totalExpense = 0;
@@ -336,6 +337,7 @@ class DashboardScreen extends ConsumerWidget {
               color: const Color(0xFF03DAC6),
               icon: Icons.add_circle_outline_rounded,
               isDark: isDark,
+              currency: currency,
             ),
             const SizedBox(height: 12),
             _buildSummaryRow(
@@ -344,6 +346,7 @@ class DashboardScreen extends ConsumerWidget {
               color: Colors.redAccent,
               icon: Icons.remove_circle_outline_rounded,
               isDark: isDark,
+              currency: currency,
             ),
             const SizedBox(height: 12),
             _buildSummaryRow(
@@ -352,6 +355,7 @@ class DashboardScreen extends ConsumerWidget {
               color: isDark ? Colors.white54 : Colors.black54,
               icon: Icons.sync_alt_rounded,
               isDark: isDark,
+              currency: currency,
             ),
             const SizedBox(height: 16),
           ],
@@ -360,7 +364,7 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryRow({required String label, required double amount, required Color color, required IconData icon, required bool isDark}) {
+  Widget _buildSummaryRow({required String label, required double amount, required Color color, required IconData icon, required bool isDark, required dynamic currency}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -375,7 +379,7 @@ class DashboardScreen extends ConsumerWidget {
           Text(label, style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.w500)),
           const Spacer(),
           Text(
-            CurrencyFormatter.format(amount),
+            CurrencyFormatter.format(amount, currency: currency),
             style: GoogleFonts.spaceGrotesk(color: color, fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
@@ -385,6 +389,7 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildTransactionCard(BuildContext context, WidgetRef ref, dynamic t) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     final isIncome = t.type == 'income' || t.type == 'debt_borrowed' || t.type == 'debt_repayment_received';
     final isTransfer = t.type == 'transfer';
     final isDebt = t.type.startsWith('debt_');
@@ -452,12 +457,12 @@ class DashboardScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+                  '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount, currency: currency)}',
                   style: GoogleFonts.spaceGrotesk(color: isDebt ? (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent) : statusColor, fontWeight: FontWeight.bold, fontSize: 17),
                 ),
                 if (hasFee)
                   Text(
-                    '+ Fee: ${CurrencyFormatter.format(t.fee)}',
+                    '+ Fee: ${CurrencyFormatter.format(t.fee, currency: currency)}',
                     style: GoogleFonts.inter(color: Colors.redAccent.withOpacity(0.7), fontSize: 10, fontWeight: FontWeight.bold),
                   ),
               ],
@@ -470,6 +475,7 @@ class DashboardScreen extends ConsumerWidget {
 
   void _showTransactionDetails(BuildContext context, WidgetRef ref, dynamic t) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.read(currencyProvider);
     final isIncome = t.type == 'income' || t.type == 'debt_borrowed' || t.type == 'debt_repayment_received';
     final isTransfer = t.type == 'transfer';
     final isDebt = t.type.startsWith('debt_');
@@ -514,14 +520,14 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Text(
-                    '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount)}',
+                    '${isTransfer ? '' : (isIncome ? '+' : '-')}${CurrencyFormatter.format(t.amount, currency: currency)}',
                     style: GoogleFonts.spaceGrotesk(color: isDebt ? (isIncome ? const Color(0xFF03DAC6) : Colors.redAccent) : statusColor, fontSize: 32, fontWeight: FontWeight.bold),
                   ),
                   if (isTransfer && (t.fee ?? 0) > 0)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        'Transfer Fee: ${CurrencyFormatter.format(t.fee)}',
+                        'Transfer Fee: ${CurrencyFormatter.format(t.fee, currency: currency)}',
                         style: GoogleFonts.inter(color: Colors.redAccent.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                     ),

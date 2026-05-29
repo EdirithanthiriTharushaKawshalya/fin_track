@@ -1,4 +1,5 @@
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
+import 'package:fin_track/core/services/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,7 +18,6 @@ class AccountsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsStreamProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -91,6 +91,7 @@ class AccountsScreen extends ConsumerWidget {
 
   Widget _buildAssetCard(BuildContext context, WidgetRef ref, AccountModel acc) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     final bool isBank = acc.type == 'bank';
     final Color accentColor = Color(acc.colorCode);
     
@@ -134,7 +135,7 @@ class AccountsScreen extends ConsumerWidget {
                           Text(acc.name, style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black54, fontWeight: FontWeight.w600, fontSize: 14)),
                           const SizedBox(height: 4),
                           Text(
-                            CurrencyFormatter.format(acc.currentBalance), 
+                            CurrencyFormatter.format(acc.currentBalance, currency: currency), 
                             style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 28, fontWeight: FontWeight.w700),
                           ),
                         ],
@@ -225,6 +226,7 @@ class AccountsScreen extends ConsumerWidget {
     final nameCtrl = TextEditingController();
     final balanceCtrl = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.read(currencyProvider);
     String type = 'bank';
 
     showDialog(
@@ -240,7 +242,7 @@ class AccountsScreen extends ConsumerWidget {
             children: [
               _buildTextField(context, nameCtrl, 'Account Name'),
               const SizedBox(height: 16),
-              _buildTextField(context, balanceCtrl, 'Initial Balance', isNumber: true, prefix: 'Rs '),
+              _buildTextField(context, balanceCtrl, 'Initial Balance', isNumber: true, prefix: currency.symbol),
               const SizedBox(height: 16),
               _buildDropdown(context, (val) => type = val!, type),
             ],
@@ -310,6 +312,7 @@ class AccountsScreen extends ConsumerWidget {
     final amountCtrl = TextEditingController();
     final accounts = ref.read(accountsStreamProvider).value ?? [];
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.read(currencyProvider);
 
     if (accounts.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Add at least two accounts to transfer.")));
@@ -336,7 +339,7 @@ class AccountsScreen extends ConsumerWidget {
                 Padding(padding: const EdgeInsets.symmetric(vertical: 8.0), child: Icon(Icons.arrow_downward, color: isDark ? Colors.white12 : Colors.black12)),
                 _buildSimpleDropdown(context, 'To', toAccId, accounts, (val) => setState(() => toAccId = val!)),
                 const SizedBox(height: 16),
-                _buildTextField(context, amountCtrl, 'Amount', isNumber: true, prefix: 'Rs '),
+                _buildTextField(context, amountCtrl, 'Amount', isNumber: true, prefix: currency.symbol),
                 const SizedBox(height: 16),
                 
                 // NEW: Fee Checkbox
@@ -357,7 +360,7 @@ class AccountsScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Apply Transfer Fee', style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, fontWeight: FontWeight.w600)),
-                              Text('Rs 25.00 will be deducted', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11)),
+                              Text('${currency.symbol} 25.00 will be deducted', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black45, fontSize: 11)),
                             ],
                           ),
                         ),

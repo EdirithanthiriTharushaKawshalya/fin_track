@@ -1,4 +1,5 @@
 import 'package:fin_track/core/models/transaction_model.dart';
+import 'package:fin_track/core/services/currency_provider.dart';
 import 'package:fin_track/features/accounts/accounts_screen.dart';
 import 'package:fin_track/features/categories/categories_screen.dart';
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
@@ -55,6 +56,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final accountsAsync = ref.watch(accountsStreamProvider);
     final categoryAsync = ref.watch(categoryStreamProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
 
     return Container(
       padding: EdgeInsets.only(
@@ -105,7 +107,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                       ? Colors.white.withOpacity(0.05)
                       : Colors.black.withOpacity(0.05),
                 ),
-                prefixText: 'Rs ',
+                prefixText: currency.symbol,
                 prefixStyle: GoogleFonts.inter(
                   color: activeColor,
                   fontSize: 20,

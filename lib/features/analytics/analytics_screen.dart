@@ -1,5 +1,6 @@
 import 'package:fin_track/core/models/transaction_model.dart';
 import 'package:fin_track/features/dashboard/dashboard_screen.dart';
+import 'package:fin_track/core/services/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -194,6 +195,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildStatDisplay(BuildContext context, String label, double amount, Color color) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -206,7 +208,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         children: [
           Text(label, style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
           const SizedBox(height: 8),
-          Text(CurrencyFormatter.format(amount), style: GoogleFonts.spaceGrotesk(color: color, fontSize: 28, fontWeight: FontWeight.bold)),
+          Text(CurrencyFormatter.format(amount, currency: currency), style: GoogleFonts.spaceGrotesk(color: color, fontSize: 28, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -249,6 +251,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildFocusInsightCard(BuildContext context, List<MapEntry<String, double>> entries, Map<String, int> counts, double total) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     if (_touchedIndex == -1) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -291,7 +294,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(CurrencyFormatter.format(entry.value), style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(CurrencyFormatter.format(entry.value, currency: currency), style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Divider(color: color.withOpacity(0.1)),
           const SizedBox(height: 12),
@@ -309,6 +312,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildPreviousDetailCard(BuildContext context, MapEntry<String, double> entry, int index, double total) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     final double percentage = (entry.value / total) * 100;
     final Color color = _getPaletteColor(index);
     final bool isSelected = _touchedIndex == index;
@@ -349,7 +353,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
             const SizedBox(width: 20),
-            Text(CurrencyFormatter.format(entry.value), style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(CurrencyFormatter.format(entry.value, currency: currency), style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
           ],
         ),
       ),

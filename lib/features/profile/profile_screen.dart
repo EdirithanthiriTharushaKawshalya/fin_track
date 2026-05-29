@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
-import 'package:fin_track/core/services/export_service.dart'; // Ensure this service file exists
+import 'package:fin_track/core/services/export_service.dart';
+import 'package:fin_track/core/services/currency_provider.dart';
+import 'package:fin_track/core/models/currency_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,6 +19,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  // ... (rest of the logic remains same until build method)
+  
   // Logic to handle sensitive password updates
   Future<void> _updateAccessKey(
       BuildContext context, String currentPassword, String newPassword) async {
@@ -93,6 +97,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = _auth.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedCurrency = ref.watch(currencyProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -126,7 +131,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     _buildProfileCard(context, user, isDark),
                     const SizedBox(height: 32),
                     
-                    // 2. Security Section
+                    // 2. Preferences Section
+                    _buildSectionLabel('SYSTEM PREFERENCES', isDark),
+                    const SizedBox(height: 16),
+                    _buildActionTile(
+                      icon: Icons.currency_exchange_rounded,
+                      title: 'Base Currency',
+                      subtitle: 'Selected: ${selectedCurrency.code} (${selectedCurrency.symbol.trim()})',
+                      isDark: isDark,
+                      onTap: () => _showCurrencyPicker(context, selectedCurrency),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // 3. Security Section
                     _buildSectionLabel('SECURITY PROTOCOLS', isDark),
                     const SizedBox(height: 16),
                     _buildActionTile(
@@ -139,7 +156,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     
                     const SizedBox(height: 32),
                     
-                    // 3. System Section
+                    // 4. System Section
                     _buildSectionLabel('SYSTEM ACTIONS', isDark),
                     const SizedBox(height: 16),
                     _buildActionTile(
@@ -163,6 +180,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showCurrencyPicker(BuildContext context, Currency currentCurrency) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Currency',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: supportedCurrencies.length,
+                itemBuilder: (context, index) {
+                  final currency = supportedCurrencies[index];
+                  final isSelected = currency.code == currentCurrency.code;
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      '${currency.code} (${currency.symbol.trim()})',
+                      style: GoogleFonts.inter(
+                        color: isDark ? Colors.white : Colors.black,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: isSelected 
+                      ? const Icon(Icons.check_circle_rounded, color: Color(0xFFBB86FC))
+                      : null,
+                    onTap: () {
+                      ref.read(currencyProvider.notifier).setCurrency(currency.code);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

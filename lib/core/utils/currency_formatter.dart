@@ -1,11 +1,13 @@
 import 'package:intl/intl.dart';
+import '../models/currency_model.dart';
 
 class CurrencyFormatter {
-  static String format(double amount) {
+  static String format(double amount, {Currency? currency}) {
+    final effectiveCurrency = currency ?? supportedCurrencies[0];
     final formatter = NumberFormat.currency(
-      locale: 'en_LK', // Sri Lankan formatting standards
-      symbol: 'Rs ', // The symbol you want
-      decimalDigits: 2, // Always show cents (e.g., .00)
+      locale: effectiveCurrency.locale,
+      symbol: effectiveCurrency.symbol,
+      decimalDigits: 2,
     );
     return formatter.format(amount);
   }

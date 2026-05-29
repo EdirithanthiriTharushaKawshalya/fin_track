@@ -1,4 +1,5 @@
 import 'package:fin_track/features/dashboard/transaction_provider.dart';
+import 'package:fin_track/core/services/currency_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -109,6 +110,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
 
   Widget _buildDebtList(BuildContext context, List<DebtModel> debts, {required bool isBorrowed}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.watch(currencyProvider);
     if (debts.isEmpty) {
       return Center(child: Text("All settled up! No records here.", style: GoogleFonts.inter(color: isDark ? Colors.white10 : Colors.black12)));
     }
@@ -156,9 +158,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(CurrencyFormatter.format(debt.amount), style: GoogleFonts.spaceGrotesk(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(CurrencyFormatter.format(debt.amount, currency: currency), style: GoogleFonts.spaceGrotesk(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
                       if (debt.paidAmount > 0)
-                        Text('Left: ${CurrencyFormatter.format(debt.remainingAmount)}', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 10)),
+                        Text('Left: ${CurrencyFormatter.format(debt.remainingAmount, currency: currency)}', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 10)),
                     ],
                   ),
                 ],
@@ -244,6 +246,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
 
   Future<bool?> _confirmSettleDebt(BuildContext context, DebtModel debt) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currency = ref.read(currencyProvider);
     String? selectedAccountId = debt.accountId;
     final amountController = TextEditingController(text: debt.remainingAmount.toStringAsFixed(0));
     String? errorText;
@@ -279,7 +282,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                       decoration: InputDecoration(
                         labelText: 'Amount to Pay',
                         labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
-                        prefixText: 'Rs ',
+                        prefixText: currency.symbol,
                         errorText: errorText,
                         errorStyle: GoogleFonts.inter(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.w500),
                         suffixIcon: IconButton(
@@ -318,7 +321,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                       final payAmount = double.tryParse(amountController.text) ?? 0.0;
                       if (payAmount > debt.remainingAmount) {
                         setState(() {
-                          errorText = 'Max Rs ${debt.remainingAmount.toStringAsFixed(0)}';
+                          errorText = 'Max ${currency.symbol}${debt.remainingAmount.toStringAsFixed(0)}';
                         });
                         return;
                       }
