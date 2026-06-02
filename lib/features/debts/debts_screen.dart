@@ -158,9 +158,18 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(CurrencyFormatter.format(debt.amount, currency: currency), style: GoogleFonts.spaceGrotesk(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(
+                        CurrencyFormatter.format(
+                          debt.paidAmount > 0 ? debt.remainingAmount : debt.amount,
+                          currency: currency,
+                        ),
+                        style: GoogleFonts.spaceGrotesk(color: color, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                       if (debt.paidAmount > 0)
-                        Text('Left: ${CurrencyFormatter.format(debt.remainingAmount, currency: currency)}', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 10)),
+                        Text(
+                          'Original: ${CurrencyFormatter.format(debt.amount, currency: currency)}',
+                          style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black38, fontSize: 10),
+                        ),
                     ],
                   ),
                 ],
