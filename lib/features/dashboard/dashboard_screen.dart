@@ -58,7 +58,7 @@ class DashboardScreen extends ConsumerWidget {
                         ? _buildEmptyState()
                         : ListView.builder(
                             key: ValueKey(selectedDate),
-                            padding: const EdgeInsets.only(bottom: 100),
+                            padding: const EdgeInsets.only(bottom: 180),
                             itemCount: dateKeys.length,
                             physics: const BouncingScrollPhysics(),
                             itemBuilder: (context, index) {
@@ -618,7 +618,7 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildFAB(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 100.0),
+      padding: const EdgeInsets.only(bottom: 80.0),
       child: FloatingActionButton(
         backgroundColor: const Color(0xFFBB86FC),
         shape: const StadiumBorder(),

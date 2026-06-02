@@ -106,7 +106,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 100.0),
+        padding: const EdgeInsets.only(bottom: 80.0),
         child: FloatingActionButton(
           backgroundColor: const Color(0xFFBB86FC),
           shape: const StadiumBorder(),
@@ -248,7 +248,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
     final Color color = isBorrowed ? const Color(0xFFCF6679) : const Color(0xFF03DAC6);
 
     return ListView.builder(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 180),
       itemCount: debts.length,
       physics: const BouncingScrollPhysics(),
       itemBuilder: (context, index) {

@@ -45,7 +45,7 @@ class GoalsScreen extends ConsumerWidget {
         });
 
         return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 180),
           itemCount: sortedGoals.length,
           physics: const BouncingScrollPhysics(),
           itemBuilder: (context, index) {

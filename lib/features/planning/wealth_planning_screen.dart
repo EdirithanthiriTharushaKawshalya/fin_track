@@ -36,7 +36,7 @@ class WealthPlanningScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 100.0),
+        padding: const EdgeInsets.only(bottom: 80.0),
         child: FloatingActionButton(
           backgroundColor: const Color(0xFF03DAC6),
           shape: const StadiumBorder(),

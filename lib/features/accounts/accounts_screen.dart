@@ -39,7 +39,7 @@ class AccountsScreen extends ConsumerWidget {
                   data: (accounts) {
                     if (accounts.isEmpty) return _buildEmptyState(context);
                     return ListView.separated(
-                      padding: const EdgeInsets.only(bottom: 100),
+                      padding: const EdgeInsets.only(bottom: 180),
                       itemCount: accounts.length,
                       physics: const BouncingScrollPhysics(),
                       separatorBuilder: (_, __) => const SizedBox(height: 16),
@@ -195,7 +195,7 @@ class AccountsScreen extends ConsumerWidget {
 
   Widget _buildFAB(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 100.0),
+      padding: const EdgeInsets.only(bottom: 80.0),
       child: FloatingActionButton(
         backgroundColor: const Color(0xFFBB86FC),
         shape: const StadiumBorder(), 
