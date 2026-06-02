@@ -24,7 +24,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Future<void> _signUp() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Access Keys do not match.')),
+        const SnackBar(content: Text('Passwords do not match.')),
       );
       return;
     }
@@ -41,9 +41,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
       if (mounted) Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      String errorMessage = e.message ?? 'Registration Failed';
+      String errorMessage = e.message ?? 'Sign up failed';
       if (e.code == 'internal-error' || errorMessage.contains('An internal error has occurred')) {
-        errorMessage = 'Failed to create identity. The system ID might already be registered or invalid.';
+        errorMessage = 'Failed to create account. This email might already be in use or is invalid.';
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -109,7 +109,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               dropdownColor: const Color(0xFF1A1A1A),
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF03DAC6)),
               isExpanded: true,
-              hint: Text('Select Base Currency', style: GoogleFonts.inter(color: Colors.white38, fontSize: 14)),
+              hint: Text('Select Currency', style: GoogleFonts.inter(color: Colors.white38, fontSize: 14)),
               style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
               items: supportedCurrencies.map((Currency currency) {
                 return DropdownMenuItem<String>(
@@ -173,7 +173,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'CREATE IDENTITY',
+                      'CREATE ACCOUNT',
                       style: GoogleFonts.inter(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
@@ -183,7 +183,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'INITIALIZING NEW DATABASE ENTRY',
+                      'JOIN FIN-TRACK TODAY',
                       style: GoogleFonts.inter(
                         fontSize: 10,
                         color: Colors.white38,
@@ -193,20 +193,20 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     const SizedBox(height: 48),
                     _buildGlassInput(
                       controller: _emailController,
-                      label: 'System ID (Email)',
+                      label: 'Email Address',
                       icon: Icons.mail_outline_rounded,
                     ),
                     const SizedBox(height: 16),
                     _buildGlassInput(
                       controller: _passwordController,
-                      label: 'New Access Key',
+                      label: 'Password',
                       icon: Icons.lock_outline_rounded,
                       isPassword: true,
                     ),
                     const SizedBox(height: 16),
                     _buildGlassInput(
                       controller: _confirmPasswordController,
-                      label: 'Confirm Access Key',
+                      label: 'Confirm Password',
                       icon: Icons.shield_outlined,
                       isPassword: true,
                     ),
@@ -229,7 +229,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.black)
                             : Text(
-                                'INITIALIZE ACCOUNT',
+                                'CREATE ACCOUNT',
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,

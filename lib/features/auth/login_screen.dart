@@ -26,15 +26,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Identity Verified. Access Granted.')),
+          const SnackBar(content: Text('Login successful!')),
         );
       }
     } on FirebaseAuthException catch (e) {
-      String errorMessage = e.message ?? 'Auth Error';
+      String errorMessage = e.message ?? 'Login Error';
       
       // Workaround for Firebase Auth on Windows returning 'internal error' for invalid credentials
       if (e.code == 'internal-error' || errorMessage.contains('An internal error has occurred')) {
-        errorMessage = 'Invalid System ID or Access Key. Please try again.';
+        errorMessage = 'Invalid email or password. Please try again.';
       }
 
       if (mounted) {
@@ -49,6 +49,74 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final emailController = TextEditingController(text: _emailController.text);
+
+    return showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: AlertDialog(
+          backgroundColor: const Color(0xFF1A1A1A).withOpacity(0.8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(
+            'Reset Password',
+            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter your email address and we\'ll send you a link to reset your password.',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              _buildGlassInput(
+                controller: emailController,
+                label: 'Email Address',
+                icon: Icons.alternate_email_rounded,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white38)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
+                if (email.isEmpty) return;
+
+                try {
+                  await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password reset link sent! Check your email.')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${e.toString()}')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFBB86FC),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Send Link'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildGlassInput({
@@ -142,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'AUTHENTICATION REQUIRED',
+                      'WELCOME BACK',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Colors.white38,
@@ -152,17 +220,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 48),
                     _buildGlassInput(
                       controller: _emailController,
-                      label: 'System ID (Email)',
+                      label: 'Email Address',
                       icon: Icons.alternate_email_rounded,
                     ),
                     const SizedBox(height: 20),
                     _buildGlassInput(
                       controller: _passwordController,
-                      label: 'Access Key',
+                      label: 'Password',
                       icon: Icons.lock_open_rounded,
                       isPassword: true,
                     ),
-                    const SizedBox(height: 40),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _showForgotPasswordDialog,
+                        child: Text(
+                          'Forgot Password?',
+                          style: GoogleFonts.inter(
+                            color: Colors.white38,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       height: 60,
@@ -179,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.black)
                             : Text(
-                                'AUTHORIZE',
+                                'LOGIN',
                                 style: GoogleFonts.inter(
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
@@ -196,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         );
                       },
                       child: Text(
-                        'Request New Access Account',
+                        "Don't have an account? Sign up",
                         style: GoogleFonts.inter(
                           color: const Color(0xFF03DAC6),
                           fontSize: 13,
