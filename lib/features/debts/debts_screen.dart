@@ -105,6 +105,136 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
           ],
         ),
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 100.0),
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFFBB86FC),
+          shape: const StadiumBorder(),
+          onPressed: () => _showDebtTypeSelector(context, ref),
+          child: const Icon(Icons.add, color: Colors.black, size: 28),
+        ),
+      ),
+    );
+  }
+
+  void _showDebtTypeSelector(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          title: Text('Choose Record Type', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('I Borrowed Money', style: GoogleFonts.inter(color: const Color(0xFFCF6679))),
+                onTap: () { Navigator.pop(context); _showAddDebtDialog(context, ref, 'borrowed'); },
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              ListTile(
+                title: Text('I Lent Money', style: GoogleFonts.inter(color: const Color(0xFF03DAC6))),
+                onTap: () { Navigator.pop(context); _showAddDebtDialog(context, ref, 'lent'); },
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddDebtDialog(BuildContext context, WidgetRef ref, String type) {
+    final nameCtrl = TextEditingController();
+    final amountCtrl = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    String? selectedAccountId;
+
+    showDialog(
+      context: context,
+      builder: (context) => Consumer(
+        builder: (context, ref, child) {
+          final accountsAsync = ref.watch(accountsStreamProvider);
+          return BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+            child: AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              title: Text(type == 'borrowed' ? 'Add Borrowed Amount' : 'Add Lent Amount', style: GoogleFonts.spaceGrotesk(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDialogField(context, nameCtrl, 'Person\'s Name'),
+                  const SizedBox(height: 16),
+                  _buildDialogField(context, amountCtrl, 'Total Amount', isNumber: true, prefix: 'Rs '),
+                  const SizedBox(height: 16),
+                  accountsAsync.when(
+                    data: (accounts) {
+                      if (selectedAccountId == null && accounts.isNotEmpty) {
+                        selectedAccountId = accounts.first.id;
+                      }
+                      return DropdownButtonFormField<String>(
+                        value: selectedAccountId,
+                        dropdownColor: isDark ? const Color(0xFF121212) : Colors.white,
+                        style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+                        decoration: InputDecoration(
+                          labelText: type == 'borrowed' ? 'Account Receiving Money' : 'Account Giving Money',
+                          labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
+                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
+                          focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
+                        ),
+                        items: accounts.map((acc) => DropdownMenuItem(value: acc.id, child: Text(acc.name))).toList(),
+                        onChanged: (val) => selectedAccountId = val,
+                      );
+                    },
+                    loading: () => const LinearProgressIndicator(color: Color(0xFFBB86FC)),
+                    error: (_, __) => const Text('Error loading accounts'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.inter(color: isDark ? Colors.white38 : Colors.black38))),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFBB86FC), shape: const StadiumBorder()),
+                  onPressed: () {
+                    if (nameCtrl.text.isNotEmpty && amountCtrl.text.isNotEmpty) {
+                      ref.read(firestoreServiceProvider).addDebt(
+                        personName: nameCtrl.text.trim(),
+                        amount: double.parse(amountCtrl.text),
+                        type: type,
+                        dueDate: DateTime.now().add(const Duration(days: 14)),
+                        accountId: selectedAccountId,
+                      );
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text('Save', style: GoogleFonts.inter(color: Colors.black, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDialogField(BuildContext context, TextEditingController ctrl, String hint, {bool isNumber = false, String? prefix}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return TextField(
+      controller: ctrl,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+      decoration: InputDecoration(
+        labelText: hint,
+        labelStyle: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black45, fontSize: 12),
+        prefixText: prefix,
+        prefixStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87),
+        enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: isDark ? Colors.white12 : Colors.black12)),
+        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFBB86FC))),
+      ),
     );
   }
 

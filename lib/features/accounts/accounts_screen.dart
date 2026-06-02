@@ -194,11 +194,14 @@ class AccountsScreen extends ConsumerWidget {
   }
 
   Widget _buildFAB(BuildContext context, WidgetRef ref) {
-    return FloatingActionButton(
-      backgroundColor: const Color(0xFFBB86FC),
-      shape: const StadiumBorder(), 
-      onPressed: () => _showAddAccountDialog(context, ref),
-      child: const Icon(Icons.add, color: Colors.black, size: 28),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 100.0),
+      child: FloatingActionButton(
+        backgroundColor: const Color(0xFFBB86FC),
+        shape: const StadiumBorder(), 
+        onPressed: () => _showAddAccountDialog(context, ref),
+        child: const Icon(Icons.add, color: Colors.black, size: 28),
+      ),
     );
   }
 

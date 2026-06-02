@@ -617,16 +617,19 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildFAB(BuildContext context) {
-    return FloatingActionButton(
-      backgroundColor: const Color(0xFFBB86FC),
-      shape: const StadiumBorder(),
-      onPressed: () => showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => const AddTransactionSheet(),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 100.0),
+      child: FloatingActionButton(
+        backgroundColor: const Color(0xFFBB86FC),
+        shape: const StadiumBorder(),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const AddTransactionSheet(),
+        ),
+        child: const Icon(Icons.add, color: Colors.black, size: 32),
       ),
-      child: const Icon(Icons.add, color: Colors.black, size: 32),
     );
   }
 
