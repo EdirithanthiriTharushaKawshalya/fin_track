@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/widgets/grid_background.dart';
+import '../../core/widgets/app_background.dart';
 import 'dart:ui';
 
 class AboutScreen extends StatelessWidget {
@@ -13,7 +13,7 @@ class AboutScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: GridBackground(
+      body: AppBackground(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),

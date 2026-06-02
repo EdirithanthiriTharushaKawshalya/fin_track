@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/widgets/grid_background.dart';
+import '../../core/widgets/app_background.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -156,8 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
-      body: GridBackground(
-        opacity: 0.1,
+      body: AppBackground(
         child: Stack(
           children: [
             Positioned(

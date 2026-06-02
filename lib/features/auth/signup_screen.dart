@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/widgets/grid_background.dart';
+import '../../core/widgets/app_background.dart';
 import '../../core/models/currency_model.dart';
 import '../../core/services/currency_provider.dart';
 
@@ -142,8 +142,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: GridBackground(
-        opacity: 0.1,
+      body: AppBackground(
         child: Stack(
           children: [
             Positioned(

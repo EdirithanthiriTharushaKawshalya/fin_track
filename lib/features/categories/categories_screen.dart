@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:ui';
 import '../../core/models/category_model.dart';
-import '../../core/widgets/grid_background.dart';
+import '../../core/widgets/app_background.dart';
 
 final categoryStreamProvider = StreamProvider<List<CategoryModel>>((ref) {
   return ref.watch(firestoreServiceProvider).getCategories();
@@ -31,7 +31,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: GridBackground(
+      body: AppBackground(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
