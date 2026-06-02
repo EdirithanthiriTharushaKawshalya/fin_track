@@ -58,10 +58,10 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
             ),
             const SizedBox(height: 24),
             
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+            Center(
               child: Container(
-                height: 50,
+                width: 280, // Standardized fixed width
+                height: 48,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -73,11 +73,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                   controller: _tabController,
                   indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(100),
-                    color: _tabController.index == 0 ? const Color(0xFFCF6679).withOpacity(0.2) : const Color(0xFF03DAC6).withOpacity(0.2),
+                    color: _tabController.index == 0 ? const Color(0xFFCF6679) : const Color(0xFF03DAC6),
                   ),
-                  labelColor: _tabController.index == 0 ? const Color(0xFFCF6679) : const Color(0xFF03DAC6),
+                  labelColor: Colors.black,
                   unselectedLabelColor: isDark ? Colors.white24 : Colors.black26,
-                  labelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.8),
+                  labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.5),
                   dividerColor: Colors.transparent,
                   indicatorSize: TabBarIndicatorSize.tab,
                   tabs: const [Tab(text: 'I OWE'), Tab(text: 'OWED TO ME')],

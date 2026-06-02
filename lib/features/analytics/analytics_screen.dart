@@ -100,20 +100,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildFloatingToggle(BuildContext context, Color activeColor) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(100),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
-        boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Row(
-        children: [
-          _toggleButton(context, 'EXPENSES', 'expense', const Color(0xFFCF6679)),
-          _toggleButton(context, 'INCOME', 'income', const Color(0xFF03DAC6)),
-        ],
+    return Center(
+      child: Container(
+        width: 280, // Standardized fixed width
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1)),
+          boxShadow: isDark ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          children: [
+            _toggleButton(context, 'EXPENSES', 'expense', const Color(0xFFCF6679)),
+            _toggleButton(context, 'INCOME', 'income', const Color(0xFF03DAC6)),
+          ],
+        ),
       ),
     );
   }
@@ -129,7 +131,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         }),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: isActive ? color : Colors.transparent,
             borderRadius: BorderRadius.circular(100),
@@ -141,6 +143,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               color: isActive ? Colors.black : (isDark ? Colors.white24 : Colors.black26),
               fontWeight: FontWeight.w900,
               fontSize: 11,
+              letterSpacing: 0.5,
             ),
           ),
         ),
