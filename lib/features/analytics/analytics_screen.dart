@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
 import '../dashboard/transaction_provider.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/chart_theme.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -190,7 +190,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         const SizedBox(height: 40),
         Text('DETAILED BREAKDOWN', style: GoogleFonts.inter(color: isDark ? Colors.white24 : Colors.black26, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 2)),
         const SizedBox(height: 16),
-        ...sortedEntries.asMap().entries.map((e) => _buildPreviousDetailCard(context, e.value, e.key, total)),
+        ...sortedEntries.asMap().entries.map((e) => _buildPreviousDetailCard(context, e.value, e.key, total, sortedEntries.length)),
         const SizedBox(height: 80),
       ],
     );
@@ -234,17 +234,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             },
           ),
           borderData: FlBorderData(show: false),
-          sectionsSpace: 2,
+          sectionsSpace: 1.5,
           centerSpaceRadius: 0, 
           sections: entries.asMap().entries.map((e) {
             final isTouched = e.key == _touchedIndex;
+            final color = _getPaletteColor(e.key, entries.length);
+            final sliceColor = isTouched ? color.withOpacity(1.0) : color;
+
             return PieChartSectionData(
-              color: _getPaletteColor(e.key).withOpacity(isTouched ? 1.0 : 0.7),
+              color: sliceColor,
               value: e.value.value,
-              title: isTouched ? '${((e.value.value / total) * 100).toStringAsFixed(0)}%' : '',
-              radius: isTouched ? 140 : 130,
-              titlePositionPercentageOffset: 0.6,
-              titleStyle: GoogleFonts.spaceGrotesk(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              showTitle: false,
+              radius: isTouched ? 100 : 90,
             );
           }).toList(),
         ),
@@ -275,7 +276,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     }
 
     final entry = entries[_touchedIndex];
-    final color = _getPaletteColor(_touchedIndex);
+    final color = _getPaletteColor(_touchedIndex, entries.length);
     final count = counts[entry.key] ?? 0;
 
     return Container(
@@ -313,11 +314,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildPreviousDetailCard(BuildContext context, MapEntry<String, double> entry, int index, double total) {
+  Widget _buildPreviousDetailCard(BuildContext context, MapEntry<String, double> entry, int index, double total, int totalCount) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currency = ref.watch(currencyProvider);
     final double percentage = (entry.value / total) * 100;
-    final Color color = _getPaletteColor(index);
+    final Color color = _getPaletteColor(index, totalCount);
     final bool isSelected = _touchedIndex == index;
 
     return Container(
@@ -363,10 +364,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Color _getPaletteColor(int index) {
-    final List<Color> palette = _activeType == 'expense' 
-      ? [const Color(0xFFCF6679), const Color(0xFFBB86FC), const Color(0xFFFFB74D), const Color(0xFFF06292), const Color(0xFF03DAC6)]
-      : [const Color(0xFF03DAC6), const Color(0xFF64B5F6), const Color(0xFF81C784), const Color(0xFF4DD0E1), const Color(0xFFFFD54F)];
-    return palette[index % palette.length];
+  Color _getPaletteColor(int index, int totalCount) {
+    return ChartTheme.getMonochromaticColor(index, totalCount, _activeType);
   }
 }
