@@ -54,26 +54,32 @@ class BalanceCard extends ConsumerWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.all(20),
+              child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.black.withOpacity(0.15) : Colors.black.withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(20),
+                  Expanded(
+                    child: _buildStatTile(
+                      context: context,
+                      ref: ref,
+                      label: 'Income',
+                      value: income,
+                      icon: Icons.south_west_rounded,
+                      color: const Color(0xFF03DAC6),
+                      isDark: isDark,
+                      currency: currency,
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatColumn(context, ref, 'Income', income, const Color(0xFF03DAC6), Icons.arrow_downward),
-                        ),
-                        Container(height: 30, width: 1, color: isDark ? Colors.white10 : Colors.black12),
-                        Expanded(
-                          child: _buildStatColumn(context, ref, 'Expenses', expense, const Color(0xFFFF0266), Icons.arrow_upward, crossAxis: CrossAxisAlignment.end),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _buildStatTile(
+                      context: context,
+                      ref: ref,
+                      label: 'Expenses',
+                      value: expense,
+                      icon: Icons.north_east_rounded,
+                      color: const Color(0xFFFF0266),
+                      isDark: isDark,
+                      currency: currency,
                     ),
                   ),
                 ],
@@ -85,34 +91,71 @@ class BalanceCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatColumn(BuildContext context, WidgetRef ref, String label, double value, Color color, IconData icon, {CrossAxisAlignment crossAxis = CrossAxisAlignment.start}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currency = ref.watch(currencyProvider);
-    return Column(
-      crossAxisAlignment: crossAxis,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (crossAxis == CrossAxisAlignment.start) Icon(icon, color: color, size: 12),
-            const SizedBox(width: 4),
-            Text(
-              label, 
-              style: GoogleFonts.inter(
-                color: isDark ? Colors.white38 : Colors.black38, 
-                fontSize: 11, 
-                fontWeight: FontWeight.w500
-              )
+  Widget _buildStatTile({
+    required BuildContext context,
+    required WidgetRef ref,
+    required String label,
+    required double value,
+    required IconData icon,
+    required Color color,
+    required bool isDark,
+    required dynamic currency,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.black.withOpacity(0.25) : Colors.black.withOpacity(0.02),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: color.withOpacity(0.15),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    color: isDark ? Colors.white60 : Colors.black54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyFormatter.format(value, currency: currency),
+              style: GoogleFonts.spaceGrotesk(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            if (crossAxis == CrossAxisAlignment.end) ...[const SizedBox(width: 4), Icon(icon, color: color, size: 12)],
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          CurrencyFormatter.format(value, currency: currency),
-          style: GoogleFonts.spaceGrotesk(color: color, fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

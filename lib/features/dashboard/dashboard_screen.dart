@@ -48,7 +48,9 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   const SizedBox(height: 20),
                   _buildHeader(context, ref, selectedDate),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  _buildDateStrip(context, ref, selectedDate),
+                  const SizedBox(height: 20),
                   const BalanceCard(), 
                   const SizedBox(height: 32),
                   _buildSubHeader(context, "Recent Transactions"),
@@ -639,5 +641,113 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildEmptyState() {
     return Center(child: Text("No transactions this month", style: GoogleFonts.inter(color: Colors.white10, fontSize: 14)));
+  }
+
+  Widget _buildDateStrip(BuildContext context, WidgetRef ref, DateTime selectedDate) {
+    // Find Monday of the current week containing selectedDate
+    final monday = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+    final daysOfWeek = List.generate(7, (index) => monday.add(Duration(days: index)));
+    final now = DateTime.now();
+
+    return Row(
+      children: daysOfWeek.map((day) {
+        // Only highlight if it is the actual real today
+        final isToday = day.year == now.year &&
+            day.month == now.month &&
+            day.day == now.day;
+        final dayLabel = DateFormat('E').format(day).toUpperCase(); // e.g., MON
+        final dateLabel = day.day.toString(); // e.g., 3
+
+        return _buildDateCapsule(
+          dayLabel: dayLabel,
+          dateLabel: dateLabel,
+          isSelected: isToday,
+          context: context,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDateCapsule({
+    required String dayLabel,
+    required String dateLabel,
+    required bool isSelected,
+    required BuildContext context,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    final Color selectedBg = primaryColor;
+    final Color unselectedBg = isDark ? const Color(0xFF1E1E1E) : Colors.black.withOpacity(0.04);
+
+    final Color selectedDot = Colors.white;
+    final Color unselectedDot = isDark ? Colors.white30 : Colors.black26;
+
+    final Color selectedDayColor = Colors.white.withOpacity(0.75);
+    final Color unselectedDayColor = isDark ? Colors.white38 : Colors.black45;
+
+    final Color selectedDateColor = Colors.white;
+    final Color unselectedDateColor = isDark ? Colors.white : Colors.black87;
+
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? selectedBg : unselectedBg,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: isSelected
+                ? selectedBg
+                : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: selectedBg.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Capsule dot
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isSelected ? selectedDot : unselectedDot,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Day of the week (e.g. MON)
+            Text(
+              dayLabel,
+              style: GoogleFonts.inter(
+                color: isSelected ? selectedDayColor : unselectedDayColor,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Date number (e.g. 3)
+            Text(
+              dateLabel,
+              style: GoogleFonts.spaceGrotesk(
+                color: isSelected ? selectedDateColor : unselectedDateColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
