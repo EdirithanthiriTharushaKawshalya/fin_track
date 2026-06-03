@@ -14,7 +14,6 @@ class BalanceCard extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currency = ref.watch(currencyProvider);
 
-    final balance = portfolio['balance'] as double;
     final income = portfolio['income'] as double;
     final expense = portfolio['expense'] as double;
 
@@ -59,24 +58,6 @@ class BalanceCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Total Balance',
-                    style: GoogleFonts.inter(
-                      color: isDark ? Colors.white54 : Colors.black45, 
-                      fontSize: 13, 
-                      fontWeight: FontWeight.w500
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    CurrencyFormatter.format(balance, currency: currency),
-                    style: GoogleFonts.spaceGrotesk(
-                      color: isDark ? Colors.white : Colors.black, 
-                      fontSize: 38, 
-                      fontWeight: FontWeight.w700
-                    ),
-                  ),
-                  const SizedBox(height: 28),
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(

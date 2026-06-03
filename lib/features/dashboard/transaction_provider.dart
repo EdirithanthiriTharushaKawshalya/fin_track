@@ -22,18 +22,9 @@ final portfolioProvider = Provider.autoDispose((ref) {
     data: (transactions) {
       double income = 0;
       double expense = 0;
-      double totalBalance = 0;
 
       for (var t in transactions) {
-        // 1. Calculate Global Net Worth (All Time)
-        // Transfers are ignored here because (-X + X = 0)
-        if (t.type == 'income') {
-          totalBalance += t.amount;
-        } else if (t.type == 'expense') {
-          totalBalance -= t.amount;
-        }
-
-        // 2. Calculate Monthly Stats for the Balance Card
+        // Calculate Monthly Stats for the Balance Card
         // We EXPLICITLY check for 'income' and 'expense' only.
         // This ensures 'transfer' types are skipped for these totals.
         if (t.date.year == selectedDate.year &&
@@ -46,9 +37,9 @@ final portfolioProvider = Provider.autoDispose((ref) {
         }
       }
 
-      return {'income': income, 'expense': expense, 'balance': totalBalance};
+      return {'income': income, 'expense': expense};
     },
-    loading: () => {'income': 0.0, 'expense': 0.0, 'balance': 0.0},
-    error: (_, __) => {'income': 0.0, 'expense': 0.0, 'balance': 0.0},
+    loading: () => {'income': 0.0, 'expense': 0.0},
+    error: (_, __) => {'income': 0.0, 'expense': 0.0},
   );
 });
